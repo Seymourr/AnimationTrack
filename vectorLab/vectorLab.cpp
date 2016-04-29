@@ -21,6 +21,8 @@ void key(unsigned char k, int x, int y);  //handle key presses
 void reshape(int width, int height);      //when the window is resized
 void init_drawing(void);                  //drawing intialisation
 
+int toDraw = 1;
+
 void DrawVector(Position& startPos, Vector& v1)
 {
 	//draw the vector v1 starting from position startPos
@@ -50,6 +52,37 @@ void DrawVector(Position& startPos, Vector& v1)
 	glPopMatrix();
 }
 
+void DrawDashed(Position& startPos, Vector& v1)
+{
+	//draw the vector v1 starting from position startPos
+	//this function will only work as long as the z coordinate for both positions is zero
+	float length = sqrt((v1.x * v1.x) + (v1.y * v1.y) + (v1.z * v1.z));
+	Vector v;
+	if (length > 0.0) { v.x = v1.x / length; v.y = v1.y / length; v.z = v1.z / length; }
+	else return;
+	float d = (v.x * 0.0) + (v.y * 1.0) + (v.z * 0.0);
+	float a = RAD2DEG(acos(d));
+	if (v.x > 0.0) a = -a;
+
+	glPushMatrix();
+	glTranslatef(startPos.x, startPos.y, startPos.z);
+	glRotatef(a, 0.0, 0.0, 1.0);
+	float dashAmount = 10;
+	float dashLen = length/dashAmount; 
+	glBegin(GL_LINES);
+	
+	
+	for (int i = 0; i < dashAmount; i++) {
+		if (i % 2 != 0) { //ODD
+			glVertex3f(0.0, 0.0 + i * dashLen, 0.0);
+			glVertex3f(0.0, dashLen + i*dashLen, 0.0);
+		}
+	}
+
+	glEnd();
+	glPopMatrix();
+}
+
 void Answer1() {
 	Vector v(4.0, 2.0, 0.0);
 	Position p;
@@ -65,6 +98,9 @@ void Answer2() {
 	Vector v2(-2.0, 3.0, 0.0);
 	Vector res = v1.addTo(v2);
 	DrawVector(p, res);
+	glColor3f(1.0, 1.0, 1.0);
+	DrawVector(p, v1);
+	DrawVector(p, v2);
 }
 
 void Answer3() {
@@ -72,7 +108,6 @@ void Answer3() {
 	Vector v2(0.707, 0.707, 0.0);
 	Position p;
 	p.x = 0.0; p.y = 0.0; p.z = 0.0;
-
 
 	float tmp = v1.getDotProduct(v2);
 	tmp = tmp / v1.getMagnitude();
@@ -107,19 +142,14 @@ void Answer4() {
 	DrawVector(p, v2);
 }
 
+//Unsure/fix
 void Answer5() {
-	Vector v1(5.0, 4.0, 0.0); //v
-	Vector v2(3.0, 9.0, 0.0); //x
+	Vector v1(5.0, 4.0, 0.0); //a
+	Vector v2(3.0, 9.0, 0.0); //b
 	Position p;
 	p.x = 0.0; p.y = 0.0; p.z = 0.0;
-
-	/*
-	Vector res = v1.subtractFrom(v2);
-	res.normalise();
-	Vector v2Norm = v2;
-	v2Norm.normalise();
-	res.setMagnitude(v1.getDotProduct(v2Norm));
-	*/
+	Position p2;
+	p2.x = v1.x; p2.y = v1.y; p2.z = v1.z;
 	
 	Vector res;
 
@@ -132,10 +162,21 @@ void Answer5() {
 
 	DrawVector(p, v1);
 	DrawVector(p, v2);
-	Position p2;
-	p2.x = v1.x; p2.y = v1.y; p2.z = v1.z;
-	DrawVector(p2, res);
+	
+	
 
+	float alpha = RAD2DEG(acos(((v1.getDotProduct(v2))/v1.getMagnitude())/v2.getMagnitude()));
+	float beta = RAD2DEG(acos(((v1.getDotProduct(res)) / v1.getMagnitude()) / res.getMagnitude()));
+	float theta = 180 - alpha - beta;
+	std::cout << alpha << " " << beta << " " << theta << std::endl;
+	float len = sin(DEG2RAD(alpha)) / (sin(DEG2RAD(theta)) / v1.getMagnitude());
+	std::cout << len << std::endl;
+
+	res.setMagnitude(len);
+
+
+	DrawDashed(p2, res);
+	
 }
 
 void Answer6() {
@@ -175,14 +216,13 @@ void Answer6() {
 	res = res / l1.getMagnitude();
 	res = res / l2.getMagnitude();
 	res = RAD2DEG(acos(res));
-	std::cout << "The angle between the lines is..: " << res << " degrees" << std::endl;
+	std::cout << "The angle between the lines is " << res << " degrees" << std::endl;
 
 }
 
 void Answer7() {
 
-
-	glPointSize(2.0);
+	glPointSize(6.0);
 	glColor3f(1.0, 1.0, 1.0);
 
 	glPushMatrix();
@@ -202,7 +242,7 @@ void Answer7() {
 	p2.x = 5.0; p2.y = -2.0; p2.z = 0.0;
 
 	Vector l1(p1, p2); //a - b
-	DrawVector(p1, l1);
+
 
 	glColor3f(1.0, 1.0, 0.0);
 
@@ -217,8 +257,21 @@ void Answer7() {
 	res.z = 0.0;
 	Vector closeRes(res, p);
 
-	DrawVector(res, closeRes);
 
+	Vector line(p1, res);
+	glColor3f(1.0, 0.0, 0.0);
+	DrawDashed(p1, line);
+	glColor3f(1.0, 1.0, 0.0);
+	DrawDashed(res, closeRes); //Closest point from line
+
+	glColor3f(1.0, 1.0, 1.0);
+
+	glPushMatrix();
+	glTranslatef(0.0, 0.0, 0.0);
+	glBegin(GL_POINTS);
+	glVertex3f(res.x, res.y, 0.0);
+	glEnd();
+	glPopMatrix();
 }
 //our main routine
 int main(int argc, char *argv[])
@@ -295,7 +348,30 @@ origin.x = origin.y = origin.z = 0.0;
   glLineWidth(1.0);
   glColor3f(1.0,1.0,0.0);
  // DrawVector(p1,v1);
-  Answer7();
+
+  switch (toDraw) {
+  case 1: 
+	  Answer1();
+	  break;
+  case 2:
+	  Answer2();
+	  break;
+  case 3:
+	  Answer3();
+	  break;
+  case 4:
+	  Answer4();
+	  break;
+  case 5:
+	  Answer5();
+	  break;
+  case 6:
+	  Answer6();
+	  break;
+  case 7:
+	  Answer7();
+	  break;
+  }
 
   //draw a red horizontal line, one unit long
   glLineWidth(3.0);
@@ -352,6 +428,12 @@ void key(unsigned char k, int x, int y)
     case 27: //27 is the ASCII code for the ESCAPE key
      exit(0);
       break;
+  }
+  if (49 >= 1 && k <= 55) {
+	toDraw = k - 48;
+
+	glutPostRedisplay();
+
   }
 }
 
