@@ -108,25 +108,34 @@ void Answer4() {
 }
 
 void Answer5() {
-	Vector v1(5.0, 4.0, 0.0);
-	Vector v2(3.0, 9.0, 0.0);
+	Vector v1(5.0, 4.0, 0.0); //v
+	Vector v2(3.0, 9.0, 0.0); //x
 	Position p;
 	p.x = 0.0; p.y = 0.0; p.z = 0.0;
 
-
+	/*
 	Vector res = v1.subtractFrom(v2);
 	res.normalise();
 	Vector v2Norm = v2;
 	v2Norm.normalise();
 	res.setMagnitude(v1.getDotProduct(v2Norm));
-
+	*/
 	
+	Vector res;
+
+	float c = v2.getDotProduct(v1) / v1.getDotProduct(v1); //x . v / v . v
+	res = v1;
+
+	res.setMagnitude(res.getMagnitude() * c);
+
+	res = res.subtractFrom(v2);
 
 	DrawVector(p, v1);
 	DrawVector(p, v2);
 	Position p2;
 	p2.x = v1.x; p2.y = v1.y; p2.z = v1.z;
 	DrawVector(p2, res);
+
 }
 
 void Answer6() {
@@ -138,12 +147,78 @@ void Answer6() {
 	p.x = 0.0; p.y = 0.0; p.z = 0.0;
 
 
-	
+	Position p2;
+	p2.x = v1.x; p2.y = v1.y; p2.z = v1.z;
+
+	Position p3;
+	p3.x = v2.x; p3.y = v2.y; p3.z = v2.z;
+
+	Position p4;
+	p4.x = v3.x; p4.y = v3.y; p4.z = v3.z;
+
+	Position p5;
+	p5.x = v4.x; p5.y = v4.y; p5.z = v4.z;
+
+	Vector l1(p3, p2);
+	Vector l2(p4, p5);
+
 	DrawVector(p, v1);
 	DrawVector(p, v2);
 	DrawVector(p, v3);
 	DrawVector(p, v4);
+
+	glColor3f(1.0, 1.0, 1.0);
+	DrawVector(p3, l1);
+	DrawVector(p4, l2);
 	
+	float res = l1.getDotProduct(l2);
+	res = res / l1.getMagnitude();
+	res = res / l2.getMagnitude();
+	res = RAD2DEG(acos(res));
+	std::cout << "The angle between the lines is..: " << res << " degrees" << std::endl;
+
+}
+
+void Answer7() {
+
+
+	glPointSize(2.0);
+	glColor3f(1.0, 1.0, 1.0);
+
+	glPushMatrix();
+		glTranslatef(0.0, 0.0, 0.0);
+		glBegin(GL_POINTS);
+			glVertex3f(8.0, 3.0, 0.0);
+		glEnd();
+	glPopMatrix();
+
+	Position p; 
+	p.x = 8.0; p.y = 3.0; p.z = 0.0;
+
+	Position p1;
+	p1.x = -2.5; p1.y = -2.0; p1.z = 0.0;
+
+	Position p2;
+	p2.x = 5.0; p2.y = -2.0; p2.z = 0.0;
+
+	Vector l1(p1, p2); //a - b
+	DrawVector(p1, l1);
+
+	glColor3f(1.0, 1.0, 0.0);
+
+	Vector l2(p1, p); // a - p
+
+	float sqrdMag = pow(l1.getMagnitude(), 2.0);
+	float dotPr = l1.getDotProduct(l2);
+	float normDistance = dotPr / sqrdMag;
+	Position res;
+	res.x = p1.x + l1.x * normDistance;
+	res.y = p1.y + l1.y * normDistance;
+	res.z = 0.0;
+	Vector closeRes(res, p);
+
+	DrawVector(res, closeRes);
+
 }
 //our main routine
 int main(int argc, char *argv[])
@@ -220,7 +295,7 @@ origin.x = origin.y = origin.z = 0.0;
   glLineWidth(1.0);
   glColor3f(1.0,1.0,0.0);
  // DrawVector(p1,v1);
-  Answer5();
+  Answer7();
 
   //draw a red horizontal line, one unit long
   glLineWidth(3.0);
