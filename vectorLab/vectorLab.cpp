@@ -144,21 +144,19 @@ void Answer4() {
 
 
 void Answer5() {
-	Vector v1(5.0, 4.0, 0.0); //a
-	Vector v2(3.0, 9.0, 0.0); //b
+	Vector v1(5.0, 4.0, 0.0); 
+	Vector v2(3.0, 9.0, 0.0); 
 	Position p;
 	p.x = 0.0; p.y = 0.0; p.z = 0.0;
 	Position p2;
 	p2.x = v1.x; p2.y = v1.y; p2.z = v1.z;
 	
-	Vector res = v1;
+	Vector res = v2;
 	res.normalise();
-	float disA = res.getDotProduct(v2);
-	float disH = v2.getMagnitude();
-	float disB = sqrt(pow(disH, 2.0) - pow(disA, 2.0));
-	
+	float disA = res.getDotProduct(v1);
+
 	res = v2;
-	res.setMagnitude(disB);
+	res.setMagnitude(disA);
 	Position p3;
 	p3.x = res.x; p3.y = res.y; p3.z = res.z;
 

@@ -1,6 +1,6 @@
 
 #include "myQuat.h"
-
+#include <iostream>
 using namespace MyMathLab;
 
 MyQuat::MyQuat() {
@@ -21,7 +21,8 @@ MyQuat::MyQuat(float angleDeg, MyVector &axis) {
 MyQuat::MyQuat(MyPosition &p) {
 	this->w = 0;
 	MyVector v(p.x, p.y, p.z);
-	v.normalise();
+//	v.normalise(); ?
+	this->v = v;
 }
 
 
@@ -29,18 +30,25 @@ MyQuat MyQuat::addTo(const MyQuat &other) const{
 	MyQuat res;
 	res.w = this->w + other.w;
 	res.v = this->v.addTo(other.v);
-	res.normalise(); //?
+//	res.normalise(); //?
 	return res;
 }
 
 MyQuat MyQuat::multiplyBy(const MyQuat &other) const {
+
 	MyQuat res;
 	res.w = this->w*other.w - this->v.getDotProduct(other.v);
+	
 	MyVector a = this->v.getCrossProduct(other.v);
+	
 	MyVector b = other.v; b.uniformScale(this->w);
+	
 	MyVector c = this->v; c.uniformScale(other.w);
-	res.v = a.addTo(b).addTo(c);
-	res.normalise();
+	res.v = a.addTo(b);
+	res.v = res.v.addTo(c);
+
+	//res.normalise();
+	
 	return res;
 }
 

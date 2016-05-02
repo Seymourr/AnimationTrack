@@ -24,7 +24,7 @@ MyVector MyVector::addTo(const MyVector &other) const
 	MyVector result;
 	result.x = other.x + this->x;
 	result.y = other.y + this->y;
-	result.z = other.y + this->z;
+	result.z = other.z + this->z;
 
 	return result;
 }
@@ -34,7 +34,7 @@ MyVector MyVector::subtractFrom(const MyVector &other) const
 	MyVector result;
 	result.x = other.x - this->x;
 	result.y = other.y - this->y;
-	result.z = other.y - this->z;
+	result.z = other.z - this->z;
 
 	return result;
 }

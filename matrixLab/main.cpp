@@ -27,6 +27,12 @@ void key(unsigned char k, int x, int y);  //handle key presses
 void reshape(int width, int height);      //when the window is resized
 void init_drawing(void);                  //drawing intialisation
 
+void DrawVector(MyPosition&, MyVector&);
+void DrawLine(MyPosition&, MyPosition&);
+void drawBasis(void);
+void drawOrig(void);
+
+
 void draw_square(void) {
 	glBegin(GL_POLYGON);
 		glColor3f(1.0, 0.0, 0.0);
@@ -38,6 +44,28 @@ void draw_square(void) {
 		glColor3f(1.0, 1.0, 1.0);
 		glVertex3f(1.0, 1.0, 0.0);
 	glEnd();
+}
+
+//draw a line between the specified positions, and a big dot at the end
+void DrawLine(MyPosition& startPos, MyPosition& endPos)
+{
+	glPushMatrix();
+		float space = 0.25;
+		glBegin(GL_LINES);
+			glVertex3f(startPos.x, startPos.y, startPos.z);
+			glVertex3f(endPos.x, endPos.y, endPos.z);
+
+		glEnd();
+
+		glTranslatef(endPos.x, endPos.y, endPos.z);
+		glPointSize(8.0);
+		
+
+		glBegin(GL_POINTS);
+			glVertex3f(0.0, 0.0, 0.0);
+		glEnd();
+
+	glPopMatrix();
 }
 
 void DrawVector(MyPosition& startPos, MyVector& v1)
@@ -69,6 +97,51 @@ void DrawVector(MyPosition& startPos, MyVector& v1)
 	glPopMatrix();
 }
 
+void drawBasis() {
+	float dashAmount = 10;
+	float dashLen = 0.1;
+
+
+	//draw a blue horizontal line, one unit long
+	glLineWidth(3.0);
+	glColor3f(0.0, 0.0, 1.0);
+	glPushMatrix();
+		glTranslatef(0.0, 0.0, 0.0);
+			glBegin(GL_LINES);
+			for (int i = 0; i < dashAmount; i++) {
+				if (i % 2 != 0) { //ODD
+					glVertex2f(0.0 + i *dashLen, 0.0);
+					glVertex2f(dashLen + i*dashLen, 0.0);
+				}
+			}		
+			glEnd();
+	glPopMatrix();
+
+	//draw a blue vertical line, one unit high
+	glLineWidth(3.0);
+	glColor3f(0.0, 0.0, 1.0);
+	glPushMatrix();
+		glBegin(GL_LINES);
+		for (int i = 0; i < dashAmount; i++) {
+			if (i % 2 != 0) { //ODD
+				glVertex2f(0.0, 0.0 + i *dashLen);
+				glVertex2f(0.0, dashLen + i*dashLen);
+			}
+		}
+		glEnd();
+	glPopMatrix();
+}
+
+void drawOrig() {
+	glPointSize(8.0);
+	glColor3f(1.0, 1.0, 1.0);
+	glPushMatrix();
+		glTranslatef(0.0, 0.0, 0.0);
+		glBegin(GL_POINTS);
+			glVertex2f(0.0, 0.0);
+		glEnd();
+	glPopMatrix();
+}
 
 void manualTranslation(float x, float y, float z) {
 	MyMatrix v;
@@ -98,29 +171,116 @@ void task2dot2(void) {
 		draw_square();
 	glPopMatrix();
 }
+void printQuat(MyQuat q) {
+	std::cout << "W: " << q.w << " (X Y Z) " << q.v.x << " " << q.v.y << " " << q.v.z << std::endl;
+}
 
+void printPos(MyPosition & p) {
+	float len = sqrt((p.x * p.x) + (p.y * p.y) + (p.z * p.z));
+	std::cout << "P: " << p.x << " " << p.y << " " << p.z << "  length: " << len << std::endl;
+}
 void task3dot2(void) {
 	MyPosition p;
 	p.x = 1.0; p.y = 1.0; p.z = 0.0;
 	MyVector axis(0.0, 0.0, 1.0);
-	MyQuat qvec = MyQuat(p);
-	MyQuat q1 = MyQuat(45, axis);
+	MyQuat qvec(p);
+
+	MyQuat q1(45, axis);
+
 	MyQuat q1Conj = q1.getConjugate();
+
 	MyQuat qrA = qvec.multiplyBy(q1Conj);
+
 	MyQuat qr = q1.multiplyBy(qrA);
 	MyVector res = qr.v;
 
 	MyPosition orig;
 	orig.x = 0.0; orig.y = 0.0; orig.z = 0.0;
 
-	//Show orig
+	glPushMatrix();
+		manualTranslation(-1.0, -1.0, -6.0);
+		
 
-	//Show initial point
 
-	//show basis vector
 
-	//show final rotated point
+		//Show initial point (vector)
+		MyPosition initPoint;
+		initPoint.x = p.x; initPoint.y = p.y; initPoint.z = p.z;
+		glColor3f(1.0, 1.0, 0.0); //yellow
+
+		DrawLine(orig, initPoint);
+
+		//show final rotated point (vector)
+		glColor3f(1.0, 0.0, 0.0); //yellow
+
+		MyPosition resPoint;
+		resPoint.x = res.x; resPoint.y = res.y; resPoint.z = res.z;
+
+		DrawLine(orig, resPoint);
+		printPos(initPoint);
+		printPos(resPoint);
+		
+		//show basis
+		drawBasis();
+
+		//Show orig (point) 
+		drawOrig();
+
+	glPopMatrix();
+	
 }
+
+
+void task3dot3(void) {
+	MyPosition p;
+	p.x = 0.0; p.y = -10.0; p.z = 0.0;
+	MyVector axis(10.0, 0.0, 0.0);
+	MyQuat qvec(p);
+
+	MyQuat q1(45, axis);
+
+	MyQuat q1Conj = q1.getConjugate();
+
+	MyQuat qrA = qvec.multiplyBy(q1Conj);
+
+	MyQuat qr = q1.multiplyBy(qrA);
+	MyVector res = qr.v;
+	
+	MyPosition orig;
+	orig.x = 0.0; orig.y = 0.0; orig.z = 0.0;
+
+	glPushMatrix();
+		manualTranslation(1.0, 4.0, -15.0);
+
+		
+		//Show initial point (vector)
+		MyPosition initPoint;
+		initPoint.x = p.x; initPoint.y = p.y; initPoint.z = p.z;
+		glColor3f(1.0, 1.0, 0.0); //yellow
+
+		DrawLine(orig, initPoint);
+
+		//show final rotated point (vector)
+		glColor3f(1.0, 0.0, 0.0); //yellow
+		
+		MyPosition resPoint;
+		resPoint.x = res.x; resPoint.y = res.y; resPoint.z = res.z;
+
+		DrawLine(orig, resPoint);
+
+		//show basis
+		drawBasis();
+
+		//Show orig (point)
+		drawOrig();
+
+	glPopMatrix();
+
+
+
+}
+
+
 //our main routine
 int main(int argc, char *argv[])
 {
@@ -168,8 +328,8 @@ void draw(void)
   
   //***DO ALL YOUR DRAWING HERE****//
 
-  task2dot2();
-  
+  task3dot3();
+
  
 
   //flush what we've drawn to the buffer
