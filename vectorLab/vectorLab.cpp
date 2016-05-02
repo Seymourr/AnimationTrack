@@ -142,7 +142,7 @@ void Answer4() {
 	DrawVector(p, v2);
 }
 
-//Unsure/fix
+
 void Answer5() {
 	Vector v1(5.0, 4.0, 0.0); //a
 	Vector v2(3.0, 9.0, 0.0); //b
@@ -151,32 +151,36 @@ void Answer5() {
 	Position p2;
 	p2.x = v1.x; p2.y = v1.y; p2.z = v1.z;
 	
-	Vector res;
+	Vector res = v1;
+	res.normalise();
+	float disA = res.getDotProduct(v2);
+	float disH = v2.getMagnitude();
+	float disB = sqrt(pow(disH, 2.0) - pow(disA, 2.0));
+	
+	res = v2;
+	res.setMagnitude(disB);
+	Position p3;
+	p3.x = res.x; p3.y = res.y; p3.z = res.z;
 
-	float c = v2.getDotProduct(v1) / v1.getDotProduct(v1); //x . v / v . v
-	res = v1;
+	res = Vector(p2, p3);
 
-	res.setMagnitude(res.getMagnitude() * c);
-
-	res = res.subtractFrom(v2);
-
+	glColor3f(0.0, 1.0, 0.0);
 	DrawVector(p, v1);
+	glColor3f(1.0, 0.0, 0.0);
+
 	DrawVector(p, v2);
-	
-	
 
-	float alpha = RAD2DEG(acos(((v1.getDotProduct(v2))/v1.getMagnitude())/v2.getMagnitude()));
-	float beta = RAD2DEG(acos(((v1.getDotProduct(res)) / v1.getMagnitude()) / res.getMagnitude()));
-	float theta = 180 - alpha - beta;
-	std::cout << alpha << " " << beta << " " << theta << std::endl;
-	float len = sin(DEG2RAD(alpha)) / (sin(DEG2RAD(theta)) / v1.getMagnitude());
-	std::cout << len << std::endl;
-
-	res.setMagnitude(len);
-
-
+	glColor3f(1.0, 1.0, 0.0);
 	DrawDashed(p2, res);
-	
+
+	glPointSize(5.0);
+	glColor3f(0.0, 1.0, 0.0);
+	glPushMatrix();
+		glTranslatef(p3.x, p3.y, p3.z);
+		glBegin(GL_POINTS);
+		glVertex2f(0.0, 0.0);
+		glEnd();
+	glPopMatrix();
 }
 
 void Answer6() {
