@@ -1,4 +1,3 @@
-
 #include "myQuat.h"
 
 MyQuat::MyQuat() {

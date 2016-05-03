@@ -1,12 +1,9 @@
 //Introductory quaternion class
 
-#include "myFormulas.h"
+#include <math.h>
 #include "myVector.h"
 #include "myMatrix.h"
-#include <math.h>
-#include <iostream>
-namespace MyMathLab
-{
+#include "myFormulas.h"
 
 class MyQuat
 {
@@ -30,6 +27,3 @@ class MyQuat
 		float w;
 		MyVector v;
 };
-
-
-}
