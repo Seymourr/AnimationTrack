@@ -155,7 +155,7 @@ void manualZrotation(int degrees) {
 	v.rotateZAxis(degrees);
 }
 
-void task2dot2(void) {
+void task2(void) {
 	glPushMatrix();
 		manualTranslation(1.0, 1.0, -5.0);
 		manualTranslation(-1.0, -1.0, 0.0);  //translate to bottom left corner
@@ -200,9 +200,6 @@ void task3dot2(void) {
 	glPushMatrix();
 		manualTranslation(-1.0, -1.0, -6.0);
 		
-
-
-
 		//Show initial point (vector)
 		MyPosition initPoint;
 		initPoint.x = p.x; initPoint.y = p.y; initPoint.z = p.z;
@@ -217,8 +214,6 @@ void task3dot2(void) {
 		resPoint.x = res.x; resPoint.y = res.y; resPoint.z = res.z;
 
 		DrawLine(orig, resPoint);
-		printPos(initPoint);
-		printPos(resPoint);
 		
 		//show basis
 		drawBasis();
@@ -327,7 +322,9 @@ void draw(void)
   glLoadIdentity();
   
   //***DO ALL YOUR DRAWING HERE****//
-
+  //.........................ANSWERS.........................
+ // task2();
+ // task3dot2();
   task3dot3();
 
  
