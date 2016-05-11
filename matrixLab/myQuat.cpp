@@ -1,6 +1,6 @@
 
 #include "myQuat.h"
-
+using namespace MyMathLab;
 MyQuat::MyQuat() {
 	this->w = 0.0;
 	this->v = MyVector();
