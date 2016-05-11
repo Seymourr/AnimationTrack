@@ -12,6 +12,7 @@
 
 #include "myvector.h"
 #include "mymatrix.h"
+#include "bSphere.h"
 using namespace MyMathLibrary;
 
 #include "stdlib.h"
@@ -29,6 +30,7 @@ void load_tank_objs(void);
 void draw_wheel(float, float, float, bool);
 void compile_tank(float, float, float);
 void drawObj(ObjMesh *);
+void createBoundingSpheres();
 
 float zPos = -30.0;
 float yRot = 0.0;
@@ -36,6 +38,7 @@ float wheelRot = 0.0;
 float turretRot = 0.0;
 float rotateMainGun = 0.0;
 float rotateSecondGun = 0.0;
+BoundingSphere bSpheres[5];
 
 int tankBodyID;
 int tankTurretID;
@@ -67,7 +70,7 @@ int main(int argc, char *argv[])
 
   load_tank_objs();
   compile_tank(0.0, 0.0, 0.0);
-
+  createBoundingSpheres();
 
   //tell glut the names of our callback functions point to our 
   //functions that we defined at the start of this file
@@ -92,15 +95,14 @@ void drawObj(ObjMesh * obj) {
 		ObjFace * objF = &obj->m_aFaces[i];
 		glBegin(GL_TRIANGLES);
 		for (int j = 0; j < 3; ++j) { //3 vertices per face
-
-				glTexCoord2f(obj->m_aTexCoordArray[objF->m_aTexCoordIndicies[j]].u, 
-							 obj->m_aTexCoordArray[objF->m_aTexCoordIndicies[j]].v);
-				glNormal3f(obj->m_aNormalArray[objF->m_aNormalIndices[j]].x,
-						   obj->m_aNormalArray[objF->m_aNormalIndices[j]].y,
-						   obj->m_aNormalArray[objF->m_aNormalIndices[j]].z);
-				glVertex3f(obj->m_aVertexArray[objF->m_aVertexIndices[j]].x,
-					obj->m_aVertexArray[objF->m_aVertexIndices[j]].y,
-					obj->m_aVertexArray[objF->m_aVertexIndices[j]].z);
+			glTexCoord2f(obj->m_aTexCoordArray[objF->m_aTexCoordIndicies[j]].u, 
+							obj->m_aTexCoordArray[objF->m_aTexCoordIndicies[j]].v);
+			glNormal3f(obj->m_aNormalArray[objF->m_aNormalIndices[j]].x,
+						obj->m_aNormalArray[objF->m_aNormalIndices[j]].y,
+						obj->m_aNormalArray[objF->m_aNormalIndices[j]].z);
+			glVertex3f(obj->m_aVertexArray[objF->m_aVertexIndices[j]].x,
+				obj->m_aVertexArray[objF->m_aVertexIndices[j]].y,
+				obj->m_aVertexArray[objF->m_aVertexIndices[j]].z);
 		}
 		glEnd();
 	}
@@ -212,6 +214,44 @@ void draw_wheel(float x, float y, float z, bool rotate) {
 		}
 		glCallList(tankWheelID);
 	glPopMatrix();
+}
+
+void createBoundingSpheres() {
+	BoundingSphere tankSphere = BoundingSphere();
+	ObjMesh * tankMesh[4];
+	tankMesh[0] = tankBody;
+	tankMesh[1] = tankTurret;
+	tankMesh[2] = tankMainGun;
+	tankMesh[3] = tankSecondaryGun;
+	//TODO: Wheels..?
+	tankSphere.createBoundingSphere(tankMesh, 4);
+
+	BoundingSphere tankBodySphere = BoundingSphere();
+	ObjMesh * tankBodyMesh[1];
+	tankBodyMesh[0] = tankBody;
+	tankBodySphere.createBoundingSphere(tankBodyMesh, 1);
+
+	BoundingSphere tankTurretSphere = BoundingSphere();
+	ObjMesh * tankTurretMesh[1];
+	tankTurretMesh[0] = tankTurret;
+	tankTurretSphere.createBoundingSphere(tankTurretMesh, 1);
+
+	BoundingSphere tankMainGunSphere = BoundingSphere();
+	ObjMesh * tankMainGunMesh[1];
+	tankMainGunMesh[0] = tankMainGun;
+	tankMainGunSphere.createBoundingSphere(tankMainGunMesh, 1);
+
+	BoundingSphere tankSecondGunSphere = BoundingSphere();
+	ObjMesh * tankSecondGunMesh[1];
+	tankSecondGunMesh[0] = tankSecondaryGun;
+	tankSecondGunSphere.createBoundingSphere(tankSecondGunMesh, 1);
+
+	bSpheres[0] = tankSphere;
+	bSpheres[1] = tankBodySphere;
+	bSpheres[2] = tankTurretSphere;
+	bSpheres[3] = tankMainGunSphere;
+	bSpheres[4] = tankSecondGunSphere;
+
 }
 
 //draw callback function - this is called by glut whenever the 
