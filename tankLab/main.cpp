@@ -19,6 +19,8 @@ using namespace MyMathLibrary;
 #include "stdio.h"
 
 #include "objloader.h"
+#include <iostream>
+#include <string>
 
 ObjMesh* tankBody;
 ObjMesh* tankTurret;
@@ -31,6 +33,11 @@ void draw_wheel(float, float, float, bool);
 void compile_tank(float, float, float);
 void drawObj(ObjMesh *);
 void createBoundingSpheres();
+void potentialPenetration(float, float, float);
+void printSphere(float, float, float, std::string, BoundingSphere);
+void drawProjectile();
+void drawPoint(BoundingSphere);
+float getDist(float, float, float, BoundingSphere);
 
 float zPos = -30.0;
 float yRot = 0.0;
@@ -39,6 +46,9 @@ float turretRot = 0.0;
 float rotateMainGun = 0.0;
 float rotateSecondGun = 0.0;
 BoundingSphere bSpheres[5];
+float projX = 0.0;
+float projY = 10.0;
+float projZ = 0.0;
 
 int tankBodyID;
 int tankTurretID;
@@ -124,6 +134,7 @@ void load_tank_objs(void)
   SetTextures(tankBody->m_iMeshID, NULL, ".\\tankobjs\\texture.tga");
 }
 
+
 void compile_tank(float x, float y, float z)
 {
 	glNewList(tankBodyID, GL_COMPILE);
@@ -155,9 +166,11 @@ void compile_tank(float x, float y, float z)
 
 void draw_tank()
 {
-	glPushMatrix();
-		glCallList(tankBodyID);
 	
+	glPushMatrix();
+
+		glCallList(tankBodyID);
+
 		//Side one
 		draw_wheel(-24.0f, -10.0f, -57.0f, false);
 		draw_wheel(-24.0f, -10.0f, -42.0f, false);
@@ -187,7 +200,6 @@ void draw_tank()
 				//Rotate beforehand to not do a massive rotation..
 				glRotatef(-rotateMainGun, 1.0, 0.0, 0.0);
 				glTranslatef(53.75, -102.0, 11.0);
-
 				glCallList(tankMainGunID);
 			glPopMatrix();
 
@@ -199,7 +211,7 @@ void draw_tank()
 			glPopMatrix();
 		glPopMatrix();
 
-
+		drawPoint(bSpheres[0]);
 	glPopMatrix();
 }
 
@@ -254,6 +266,79 @@ void createBoundingSpheres() {
 
 }
 
+/**
+*	Check if a point, given by coordinates, penetrates this tank.
+*	If such is the case, print some informaiton about the collision.
+*/
+void potentialPenetration(float x, float y, float z) {
+	std::string names[4] = { "tank body", "tank turret", "tank main gun", "tank secondary gun" };
+	//Penetrating tankSphere?
+	float d = getDist(x, y, z, bSpheres[0]);
+	if (d <= bSpheres[0].radius) {
+		printSphere(x, y, z, "tank", bSpheres[0]);
+		//Check subparts
+		for(int i = 0; i < 4; ++i) {
+			d = getDist(x, y, z, bSpheres[i + 1]);
+			if (d <= bSpheres[i + 1].radius) {
+				printSphere(x, y, z, names[i], bSpheres[i + 1]);
+			}
+		}
+	}
+}
+
+/**
+*	Return the distance between a point and a BoundingSphere
+*/
+float getDist(float x, float y, float z, BoundingSphere s) {
+	return sqrt(pow(x - s.centerX, 2)
+		+ pow(y - s.centerY, 2)
+		+ pow(z - s.centerZ, 2));
+}
+/**
+*	Print information about a point colliding with a Bounding Sphere
+*/
+void printSphere(float x, float y, float z, std::string sphere, BoundingSphere s) {
+	std::cout << "Potential penetration on " << sphere << ". "
+		<< "	Pos: (" << x << ", " << y << ", " << z << ")"
+		<< std::endl;
+	std::cout << "	Sphere center: "
+		<< "(" << s.centerX  << ", " << s.centerY << ", " << s.centerZ << ")"
+		<< std::endl;
+	std::cout << "	Sphere radius: "
+		<< s.radius
+		<< std::endl;
+}
+
+/**
+*	Draw a point, aka "projectile", at specified coordinates
+*/
+void drawProjectile() {
+	glPushMatrix();
+		glPointSize(15.0);
+		glColor3f(0.0, 1.0, 0.0);
+		glTranslatef(projX, projY, projZ);
+		glBegin(GL_POINTS);
+			glVertex2f(0.0, 0.0);
+		glEnd();
+		glColor3f(1.0, 1.0, 1.0);
+	glPopMatrix();
+}
+
+/**
+*	Draw a sphere at the coordinates given by the given Bounding Sphere object
+*/
+void drawPoint(BoundingSphere s) {
+	glPushMatrix();
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glEnable(GL_BLEND);
+		glColor4f(1, 0, 0, 0.3);
+		glTranslatef(s.centerX, s.centerY,s.centerZ);
+	
+		gluSphere(gluNewQuadric(), s.radius, 100, 20);
+	
+		glColor3f(1, 1, 1);
+	glPopMatrix();
+}
 //draw callback function - this is called by glut whenever the 
 //window needs to be redrawn
 void draw(void)
@@ -269,6 +354,9 @@ void draw(void)
   
   glRotatef(yRot,0.0,1.0,0.0);
 
+  //draw a projectile on screen at a position
+  drawProjectile();
+  potentialPenetration(projX, projY, projZ);
   //draw the tank on screen at a position
   draw_tank();
 
@@ -328,6 +416,24 @@ void key(unsigned char k, int x, int y)
 		break;
 	case 'x':
 		if (rotateSecondGun > -45) rotateSecondGun -= 2;
+		break;
+	case '8':
+		projY++;
+		break;
+	case '2':
+		projY--;
+		break;
+	case '6':
+		projX++;
+		break;
+	case '4':
+		projX--;
+		break;
+	case '9':
+		projZ++;
+		break;
+	case '7':
+		projZ--;
 		break;
     case 27: //27 is the ASCII code for the ESCAPE key
       exit(0);
