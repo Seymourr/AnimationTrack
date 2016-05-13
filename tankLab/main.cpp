@@ -12,8 +12,9 @@
 
 #include "myvector.h"
 #include "mymatrix.h"
+#include "myQuat.h"
 #include "bSphere.h"
-using namespace MyMathLibrary;
+
 
 #include "stdlib.h"
 #include "stdio.h"
@@ -21,6 +22,7 @@ using namespace MyMathLibrary;
 #include "objloader.h"
 #include <iostream>
 #include <string>
+#include <vector>
 
 ObjMesh* tankBody;
 ObjMesh* tankTurret;
@@ -30,7 +32,7 @@ ObjMesh* tankWheel;
 
 void load_tank_objs(void);
 void draw_wheel(float, float, float, bool);
-void compile_tank(float, float, float);
+void compile_tank();
 void drawObj(ObjMesh *);
 void createBoundingSpheres();
 void potentialPenetration(float, float, float);
@@ -56,6 +58,43 @@ int tankMainGunID;
 int tankSecondGunID;
 int tankWheelID;
 
+//Constant tank properties
+
+//Tank in general + tank body
+const float TANK_INIT_POSX = 0.0;
+const float TANK_INIT_POSY = 0.0;
+const float TANK_INIT_POSZ = 0.0;
+const float TANK_SCALE = 0.1;
+
+//Tank turret
+const float TANK_TURRET_TX = 0.0;
+const float TANK_TURRET_TY = 13.0;
+const float TANK_TURRET_TZ = 0.0;
+
+const float TANK_TURRET_RX = 0.0;
+const float TANK_TURRET_RY = 1.0;
+const float TANK_TURRET_RZ = 0.0;
+
+//Tank Main Gun
+const float TANK_MAING_TX = 53.75;
+const float TANK_MAING_TY = -102.0;
+const float TANK_MAING_TZ = 11.0;
+
+const float TANK_MAING_RX = 1.0;
+const float TANK_MAING_RY = 0.0;
+const float TANK_MAING_RZ = 0.0;
+
+//Tank Secondary Gun
+const float TANK_SECONDG_TX = -12.5;
+const float TANK_SECONDG_TY = 15.0;
+const float TANK_SECONDG_TZ = -4.0;
+
+const float TANK_SECONDG_RX = 0.0;
+const float TANK_SECONDG_RY = 1.0;
+const float TANK_SECONDG_RZ = 0.0;
+
+
+
 //prototypes for our callback functions
 void draw(void);    //our drawing routine
 void idle(void);    //what to do when nothing is happening
@@ -79,8 +118,8 @@ int main(int argc, char *argv[])
   init_drawing();
 
   load_tank_objs();
-  compile_tank(0.0, 0.0, 0.0);
-  createBoundingSpheres();
+  compile_tank();
+
 
   //tell glut the names of our callback functions point to our 
   //functions that we defined at the start of this file
@@ -135,11 +174,11 @@ void load_tank_objs(void)
 }
 
 
-void compile_tank(float x, float y, float z)
+void compile_tank()
 {
 	glNewList(tankBodyID, GL_COMPILE);
-		glTranslatef(x, y, z);
-		glScalef(0.1, 0.1, 0.1);		//reduce the size of the tank on screen
+		glTranslatef(TANK_INIT_POSX, TANK_INIT_POSY, TANK_INIT_POSZ);
+		glScalef(TANK_SCALE, TANK_SCALE, TANK_SCALE);		//reduce the size of the tank on screen
 		drawObj(tankBody);
 	glEndList();
 
@@ -166,11 +205,11 @@ void compile_tank(float x, float y, float z)
 
 void draw_tank()
 {
-	
+
 	glPushMatrix();
 
 		glCallList(tankBodyID);
-
+	
 		//Side one
 		draw_wheel(-24.0f, -10.0f, -57.0f, false);
 		draw_wheel(-24.0f, -10.0f, -42.0f, false);
@@ -191,28 +230,34 @@ void draw_tank()
 
 		//Turret
 		glPushMatrix();
-			glTranslatef(0.0, 13.0, 0.0);
-			glRotatef(turretRot, 0.0, 1.0, 0.0);
+			glTranslatef(TANK_TURRET_TX, TANK_TURRET_TY , TANK_TURRET_TZ);
+			glRotatef(turretRot, TANK_TURRET_RX, TANK_TURRET_RY, TANK_TURRET_RZ);
 			glCallList(tankTurretID);
 
 			//Main gun
 			glPushMatrix();
 				//Rotate beforehand to not do a massive rotation..
-				glRotatef(-rotateMainGun, 1.0, 0.0, 0.0);
-				glTranslatef(53.75, -102.0, 11.0);
+				//Notice sign
+				glRotatef(-rotateMainGun, TANK_MAING_RX, TANK_MAING_RY, TANK_MAING_RZ);
+				glTranslatef(TANK_MAING_TX, TANK_MAING_TY, TANK_MAING_TZ);
 				glCallList(tankMainGunID);
+				
 			glPopMatrix();
 
 			//Secondary gun
 			glPushMatrix();
-				glTranslatef(-12.5, 15.0, -4.0);
-				glRotatef(rotateSecondGun, 0.0, 1.0, 0.0);
+				glTranslatef(TANK_SECONDG_TX, TANK_SECONDG_TY, TANK_SECONDG_TZ);
+				glRotatef(rotateSecondGun, TANK_SECONDG_RX, TANK_SECONDG_RY, TANK_SECONDG_RZ);
 				glCallList(tankSecondGunID);
+		
 			glPopMatrix();
 		glPopMatrix();
 
-		drawPoint(bSpheres[0]);
+	
+
 	glPopMatrix();
+
+
 }
 
 void draw_wheel(float x, float y, float z, bool rotate) {
@@ -228,42 +273,130 @@ void draw_wheel(float x, float y, float z, bool rotate) {
 	glPopMatrix();
 }
 
+void translateMesh(ObjMesh &m, float x, float y, float z, float scale) {
+	for (int i = 0; i < m.m_iNumberOfVertices; ++i) {
+		m.m_aVertexArray[i].x += x*scale;
+		m.m_aVertexArray[i].y += y*scale;
+		m.m_aVertexArray[i].z += z*scale;
+	}
+}
+
+void rotateMesh(ObjMesh &m, float angle, float x, float y, float z, float scale) {
+	MyVector axis(x*scale, y*scale, z*scale);
+	MyQuat q(angle, axis);
+	MyMatrix rotMat = q.convertToRotationMatrix();
+
+	for (int i = 0; i < m.m_iNumberOfVertices; ++i) {
+		float tX = m.m_aVertexArray[i].x;
+		float tY = m.m_aVertexArray[i].y;
+		float tZ = m.m_aVertexArray[i].z;
+
+		float rX = rotMat[0] * tX + rotMat[1] * tY + rotMat[2] * tZ;
+		float rY = rotMat[4] * tX + rotMat[5] * tY + rotMat[6] * tZ;
+		float rZ = rotMat[8] * tX + rotMat[9] * tY + rotMat[10] * tZ;
+		m.m_aVertexArray[i].x = rX;
+		m.m_aVertexArray[i].y = rY;
+		m.m_aVertexArray[i].z = rZ;
+	}
+}
+
+void scaleMesh(ObjMesh &m, float s) {
+	for (int i = 0; i < m.m_iNumberOfVertices; ++i) {
+		m.m_aVertexArray[i].x *= s;
+		m.m_aVertexArray[i].y *= s;
+		m.m_aVertexArray[i].z *= s;
+	}
+}
+
+std::vector<ObjVertex> saveVert(const ObjMesh m) {
+	std::vector<ObjVertex> v;
+	for (int i = 0; i < m.m_iNumberOfVertices; ++i) {
+		ObjVertex t;
+		t.x = m.m_aVertexArray[i].x;
+		t.y = m.m_aVertexArray[i].y;
+		t.z = m.m_aVertexArray[i].z;
+		v.push_back(t);
+	}
+	return v;
+}
+
+void recoverVert(std::vector<ObjVertex> v, ObjMesh m) {
+	for (int i = 0; i < m.m_iNumberOfVertices; ++i) {
+		m.m_aVertexArray[i].x = v[i].x;
+		m.m_aVertexArray[i].y = v[i].y;
+		m.m_aVertexArray[i].z = v[i].z;
+	}
+}
 void createBoundingSpheres() {
-	BoundingSphere tankSphere = BoundingSphere();
-	ObjMesh * tankMesh[4];
-	tankMesh[0] = tankBody;
-	tankMesh[1] = tankTurret;
-	tankMesh[2] = tankMainGun;
-	tankMesh[3] = tankSecondaryGun;
-	//TODO: Wheels..?
-	tankSphere.createBoundingSphere(tankMesh, 4);
+		ObjMesh tankMesh[4];
+		
+		std::vector<ObjVertex> v1 = saveVert(*tankBody);
+		std::vector<ObjVertex> v2 = saveVert(*tankTurret);
+		std::vector<ObjVertex> v3 = saveVert(*tankMainGun);
+		std::vector<ObjVertex> v4 = saveVert(*tankSecondaryGun);
 
-	BoundingSphere tankBodySphere = BoundingSphere();
-	ObjMesh * tankBodyMesh[1];
-	tankBodyMesh[0] = tankBody;
-	tankBodySphere.createBoundingSphere(tankBodyMesh, 1);
+		tankMesh[0] = *tankBody;
 
-	BoundingSphere tankTurretSphere = BoundingSphere();
-	ObjMesh * tankTurretMesh[1];
-	tankTurretMesh[0] = tankTurret;
-	tankTurretSphere.createBoundingSphere(tankTurretMesh, 1);
+		tankMesh[1] = *tankTurret;
 
-	BoundingSphere tankMainGunSphere = BoundingSphere();
-	ObjMesh * tankMainGunMesh[1];
-	tankMainGunMesh[0] = tankMainGun;
-	tankMainGunSphere.createBoundingSphere(tankMainGunMesh, 1);
+		tankMesh[2] = *tankMainGun;
 
-	BoundingSphere tankSecondGunSphere = BoundingSphere();
-	ObjMesh * tankSecondGunMesh[1];
-	tankSecondGunMesh[0] = tankSecondaryGun;
-	tankSecondGunSphere.createBoundingSphere(tankSecondGunMesh, 1);
+		tankMesh[3] = *tankSecondaryGun;
 
-	bSpheres[0] = tankSphere;
-	bSpheres[1] = tankBodySphere;
-	bSpheres[2] = tankTurretSphere;
-	bSpheres[3] = tankMainGunSphere;
-	bSpheres[4] = tankSecondGunSphere;
 
+		for (int i = 0; i < 4; ++i) {
+			translateMesh(tankMesh[i], TANK_INIT_POSX, TANK_INIT_POSY, TANK_INIT_POSZ, 1.0);
+			scaleMesh(tankMesh[i], TANK_SCALE);
+		}
+		translateMesh(tankMesh[1], TANK_TURRET_TX, TANK_TURRET_TY, TANK_TURRET_TZ, TANK_SCALE);
+		rotateMesh(tankMesh[1], turretRot, TANK_TURRET_RX, TANK_TURRET_RY, TANK_TURRET_RZ, TANK_SCALE);
+
+		translateMesh(tankMesh[2], TANK_TURRET_TX, TANK_TURRET_TY, TANK_TURRET_TZ, TANK_SCALE);
+		rotateMesh(tankMesh[2], turretRot, TANK_TURRET_RX, TANK_TURRET_RY, TANK_TURRET_RZ, TANK_SCALE);
+		rotateMesh(tankMesh[2], -rotateMainGun, TANK_MAING_RX, TANK_MAING_RY, TANK_MAING_RZ, TANK_SCALE);
+		translateMesh(tankMesh[2], TANK_MAING_TX, TANK_MAING_TY, TANK_MAING_TZ, TANK_SCALE);
+	
+		translateMesh(tankMesh[3], TANK_TURRET_TX, TANK_TURRET_TY, TANK_TURRET_TZ, TANK_SCALE);
+		rotateMesh(tankMesh[3], turretRot, TANK_TURRET_RX, TANK_TURRET_RY, TANK_TURRET_RZ, TANK_SCALE);
+		translateMesh(tankMesh[3], TANK_SECONDG_TX, TANK_SECONDG_TY, TANK_SECONDG_TZ, TANK_SCALE);
+		rotateMesh(tankMesh[3], rotateSecondGun, TANK_SECONDG_RX, TANK_SECONDG_RY, TANK_SECONDG_RZ, TANK_SCALE);
+
+		BoundingSphere tankSphere = BoundingSphere();
+		
+		
+		tankSphere.createBoundingSphere(tankMesh, 4);
+
+		BoundingSphere tankBodySphere = BoundingSphere();
+		ObjMesh tankBodyMesh[1];
+		tankBodyMesh[0] = tankMesh[0];
+		tankBodySphere.createBoundingSphere(tankBodyMesh, 1);
+
+		BoundingSphere tankTurretSphere = BoundingSphere();
+		ObjMesh tankTurretMesh[1];
+		tankTurretMesh[0] = tankMesh[1];
+		tankTurretSphere.createBoundingSphere(tankTurretMesh, 1);
+
+		BoundingSphere tankMainGunSphere = BoundingSphere();
+		ObjMesh tankMainGunMesh[1];
+		tankMainGunMesh[0] = tankMesh[2];
+		tankMainGunSphere.createBoundingSphere(tankMainGunMesh, 1);
+
+		BoundingSphere tankSecondGunSphere = BoundingSphere();
+		ObjMesh tankSecondGunMesh[1];
+		tankSecondGunMesh[0] = tankMesh[3];
+		tankSecondGunSphere.createBoundingSphere(tankSecondGunMesh, 1);
+
+		bSpheres[0] = tankSphere;
+		bSpheres[1] = tankBodySphere;
+		bSpheres[2] = tankTurretSphere;
+		bSpheres[3] = tankMainGunSphere;
+		bSpheres[4] = tankSecondGunSphere;
+
+		recoverVert(v1, *tankBody);
+		recoverVert(v2, *tankTurret);
+		recoverVert(v3, *tankMainGun);
+		recoverVert(v4, *tankSecondaryGun);
+	
 }
 
 /**
@@ -274,12 +407,15 @@ void potentialPenetration(float x, float y, float z) {
 	std::string names[4] = { "tank body", "tank turret", "tank main gun", "tank secondary gun" };
 	//Penetrating tankSphere?
 	float d = getDist(x, y, z, bSpheres[0]);
+	std::cout << d << std::endl;
 	if (d <= bSpheres[0].radius) {
+		std::cout << d << std::endl;
+		std::cout << bSpheres[0].radius << std::endl;
 		printSphere(x, y, z, "tank", bSpheres[0]);
 		//Check subparts
 		for(int i = 0; i < 4; ++i) {
 			d = getDist(x, y, z, bSpheres[i + 1]);
-			if (d <= bSpheres[i + 1].radius) {
+			if (d <= bSpheres[i + 1].radius) { 
 				printSphere(x, y, z, names[i], bSpheres[i + 1]);
 			}
 		}
@@ -331,13 +467,14 @@ void drawPoint(BoundingSphere s) {
 	glPushMatrix();
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glEnable(GL_BLEND);
-		glColor4f(1, 0, 0, 0.3);
-		glTranslatef(s.centerX, s.centerY,s.centerZ);
-	
+		glColor4f(1, 0, 0, 0.4);
+		glTranslatef(s.centerX, s.centerY, s.centerZ);
 		gluSphere(gluNewQuadric(), s.radius, 100, 20);
-	
 		glColor3f(1, 1, 1);
 	glPopMatrix();
+
+	std::cout << "Sphere located at: (" << s.centerX << ", " << s.centerY << ", " << s.centerZ << ")" << std::endl;
+	std::cout << "Radius: " << s.radius << std::endl;
 }
 //draw callback function - this is called by glut whenever the 
 //window needs to be redrawn
@@ -355,10 +492,14 @@ void draw(void)
   glRotatef(yRot,0.0,1.0,0.0);
 
   //draw a projectile on screen at a position
+
   drawProjectile();
+  draw_tank();
+  createBoundingSpheres();
+  drawPoint(bSpheres[3]);
   potentialPenetration(projX, projY, projZ);
   //draw the tank on screen at a position
-  draw_tank();
+
 
   //flush what we've drawn to the buffer
   glFlush();

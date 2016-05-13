@@ -14,7 +14,7 @@
 		BoundingSphere(void);
 		~BoundingSphere(void) { ; }
 
-		void createBoundingSphere(ObjMesh *[], int);
+		void createBoundingSphere(ObjMesh [], int);
 
 		float radius = 0.0;
 		float centerX = 0.0;

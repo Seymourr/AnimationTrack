@@ -1,33 +1,29 @@
 //Introductory quaternion class
-#include <math.h>
-#include "myvector.h"
-#include "mymatrix.h"
 
-namespace MyMathLibrary
-{
+#include <math.h>
+#include "myVector.h"
+#include "myMatrix.h"
+#include "myFormulas.h"
 
 class MyQuat
 {
-	public:
-		MyQuat(void);
-		MyQuat(float angleDeg, MyVector &axis);	//create from axis, angle
-		MyQuat(MyPosition &p);	//create from position
-		
-		~MyQuat(void){;}
+public:
+	MyQuat(void);
+	MyQuat(float angleDeg, MyVector &axis);	//create from axis, angle
+	MyQuat(MyPosition &p);	//create from position
 
-		MyQuat addTo(const MyQuat &other) const;
-		MyQuat multiplyBy(const MyQuat &other) const;
+	~MyQuat(void) { ; }
 
-		float getMagnitude(void) const;	
-		void normalise(void);
-		MyQuat getConjugate(void) const;	
-		MyQuat getInverse(void) const;
+	MyQuat addTo(const MyQuat &other) const;
+	MyQuat multiplyBy(const MyQuat &other) const;
 
-		MyMatrix convertToRotationMatrix(void) const; 
+	float getMagnitude(void) const;
+	void normalise(void);
+	MyQuat getConjugate(void) const;
+	MyQuat getInverse(void) const;
 
-		float w;
-		MyVector v;
+	MyMatrix convertToRotationMatrix(void) const;
+
+	float w;
+	MyVector v;
 };
-
-
-}
