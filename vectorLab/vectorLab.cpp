@@ -230,30 +230,36 @@ void Answer7() {
 	glPushMatrix();
 		glTranslatef(0.0, 0.0, 0.0);
 		glBegin(GL_POINTS);
-			glVertex3f(8.0, 3.0, 0.0);
+			glVertex3f(8.0, 3.0, 0.0); //Mark the point on the screen
 		glEnd();
 	glPopMatrix();
 
-	Position p; 
+
+
+	Position p; //The point
 	p.x = 8.0; p.y = 3.0; p.z = 0.0;
 
-	Position p1;
+    //The "line"
+	Position p1; 
 	p1.x = -2.5; p1.y = -2.0; p1.z = 0.0;
-
 	Position p2;
 	p2.x = 5.0; p2.y = -2.0; p2.z = 0.0;
 
-	Vector l1(p1, p2); //a - b
+    //The line
+	Vector l1(p1, p2); 
 
 
-	glColor3f(1.0, 1.0, 0.0);
-
-	Vector l2(p1, p); // a - p
+	//Line from one point on the line to the point p
+	Vector l2(p1, p); 
 
 	float sqrdMag = pow(l1.getMagnitude(), 2.0);
 	float dotPr = l1.getDotProduct(l2);
+
+	//Normalized "distance" from p to the closest point
 	float normDistance = dotPr / sqrdMag;
+
 	Position res;
+	//Add up the normDistance..
 	res.x = p1.x + l1.x * normDistance;
 	res.y = p1.y + l1.y * normDistance;
 	res.z = 0.0;
@@ -263,6 +269,7 @@ void Answer7() {
 	Vector line(p1, res);
 	glColor3f(1.0, 0.0, 0.0);
 	DrawDashed(p1, line);
+
 	glColor3f(1.0, 1.0, 0.0);
 	DrawDashed(res, closeRes); //Closest point from line
 

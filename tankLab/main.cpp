@@ -38,8 +38,11 @@ void createBoundingSpheres();
 void potentialPenetration(float, float, float);
 void printSphere(float, float, float, std::string, BoundingSphere);
 void drawProjectile();
-void drawPoint(BoundingSphere);
+void drawLine();
+void drawPoint(BoundingSphere, float);
 float getDist(float, float, float, BoundingSphere);
+void potentialPenetrationLine();
+MyPosition getDist(BoundingSphere);
 
 float zPos = -30.0;
 float yRot = 0.0;
@@ -51,6 +54,8 @@ BoundingSphere bSpheres[5];
 float projX = 0.0;
 float projY = 10.0;
 float projZ = 0.0;
+MyPosition startPos;
+MyPosition endPos;
 
 int tankBodyID;
 int tankTurretID;
@@ -93,7 +98,7 @@ const float TANK_SECONDG_RX = 0.0;
 const float TANK_SECONDG_RY = 1.0;
 const float TANK_SECONDG_RZ = 0.0;
 
-
+std::string names[4] = { "tank body", "tank turret", "tank main gun", "tank secondary gun" };
 
 //prototypes for our callback functions
 void draw(void);    //our drawing routine
@@ -327,6 +332,8 @@ void recoverVert(std::vector<ObjVertex> v, ObjMesh m) {
 		m.m_aVertexArray[i].z = v[i].z;
 	}
 }
+
+//TODO (Or maybe not..?): Boundingspheres for wheels
 void createBoundingSpheres() {
 		ObjMesh tankMesh[4];
 		
@@ -353,7 +360,7 @@ void createBoundingSpheres() {
 
 		translateMesh(tankMesh[2], TANK_TURRET_TX, TANK_TURRET_TY, TANK_TURRET_TZ, TANK_SCALE);
 		rotateMesh(tankMesh[2], turretRot, TANK_TURRET_RX, TANK_TURRET_RY, TANK_TURRET_RZ, TANK_SCALE);
-		rotateMesh(tankMesh[2], -rotateMainGun, TANK_MAING_RX, TANK_MAING_RY, TANK_MAING_RZ, TANK_SCALE);
+		rotateMesh(tankMesh[2], rotateMainGun, TANK_MAING_RX, TANK_MAING_RY, TANK_MAING_RZ, TANK_SCALE);
 		translateMesh(tankMesh[2], TANK_MAING_TX, TANK_MAING_TY, TANK_MAING_TZ, TANK_SCALE);
 	
 		translateMesh(tankMesh[3], TANK_TURRET_TX, TANK_TURRET_TY, TANK_TURRET_TZ, TANK_SCALE);
@@ -404,31 +411,58 @@ void createBoundingSpheres() {
 *	If such is the case, print some informaiton about the collision.
 */
 void potentialPenetration(float x, float y, float z) {
-	std::string names[4] = { "tank body", "tank turret", "tank main gun", "tank secondary gun" };
+	
 	//Penetrating tankSphere?
 	float d = getDist(x, y, z, bSpheres[0]);
-	std::cout << d << std::endl;
+
 	if (d <= bSpheres[0].radius) {
-		std::cout << d << std::endl;
-		std::cout << bSpheres[0].radius << std::endl;
+		
 		printSphere(x, y, z, "tank", bSpheres[0]);
 		//Check subparts
+		bool was = false;
 		for(int i = 0; i < 4; ++i) {
 			d = getDist(x, y, z, bSpheres[i + 1]);
 			if (d <= bSpheres[i + 1].radius) { 
+				was = true;
+				drawPoint(bSpheres[i + 1], 0.4);
 				printSphere(x, y, z, names[i], bSpheres[i + 1]);
 			}
 		}
+		if(!was) drawPoint(bSpheres[0], 0.3); //Only show big sphere if none of the others was collided with..
 	}
+	std::cout << "=======================================" << std::endl; //Formatting 
 }
 
 /**
-*	Return the distance between a point and a BoundingSphere
+*	Return the distance between a point and a Bounding Sphere
 */
 float getDist(float x, float y, float z, BoundingSphere s) {
 	return sqrt(pow(x - s.centerX, 2)
 		+ pow(y - s.centerY, 2)
 		+ pow(z - s.centerZ, 2));
+}
+
+/**
+*	Return the closest point on a line between a line and a Bounding Sphere
+*/
+MyPosition getDist(BoundingSphere s) {
+	MyPosition p = startPos;
+	MyPosition sp;
+	MyVector line(startPos, endPos);
+
+	sp.x = s.centerX; sp.y = s.centerY; sp.z = s.centerZ;
+
+	MyVector lineToSphereCenter(p, sp);
+	float sqrdMag = pow(line.getMagnitude(), 2.0);
+	float dotPr = line.getDotProduct(lineToSphereCenter);
+	float normDis = dotPr / sqrdMag;
+
+	MyPosition res;
+	res.x = p.x + line.x * normDis;
+	res.y = p.y + line.y * normDis;
+	res.z = p.z + line.z * normDis;
+
+	return res;
 }
 /**
 *	Print information about a point colliding with a Bounding Sphere
@@ -461,13 +495,32 @@ void drawProjectile() {
 }
 
 /**
+*	Draw a semi-infinite line at specified coordinates 
+*/
+void drawLine()
+{
+	
+
+	glPushMatrix();
+		float space = 0.25;
+		glBegin(GL_LINES);
+			glVertex3f(startPos.x, startPos.y, startPos.z);
+			glVertex3f(endPos.x, endPos.y, endPos.z);
+		glEnd();
+	glPopMatrix();
+}
+
+/**
 *	Draw a sphere at the coordinates given by the given Bounding Sphere object
 */
-void drawPoint(BoundingSphere s) {
+void drawPoint(BoundingSphere s, float transparency) {
+	
 	glPushMatrix();
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glEnable(GL_BLEND);
-		glColor4f(1, 0, 0, 0.4);
+
+		glColor4f(1, 0, 0, transparency);
+		
 		glTranslatef(s.centerX, s.centerY, s.centerZ);
 		gluSphere(gluNewQuadric(), s.radius, 100, 20);
 		glColor3f(1, 1, 1);
@@ -476,6 +529,36 @@ void drawPoint(BoundingSphere s) {
 	std::cout << "Sphere located at: (" << s.centerX << ", " << s.centerY << ", " << s.centerZ << ")" << std::endl;
 	std::cout << "Radius: " << s.radius << std::endl;
 }
+
+/**
+*	Tests whether a given line intersect the tanks bounding spheres.
+	If such is the case, print some information about the spheres
+*/
+void potentialPenetrationLine() {
+	//Penetrating tankSphere?
+	MyPosition p = getDist(bSpheres[0]);
+
+	float d = getDist(p.x, p.y, p.z, bSpheres[0]);
+	if (d <= bSpheres[0].radius) {
+
+		printSphere(p.x, p.y, p.z, "tank", bSpheres[0]);
+		//Check subparts
+		bool was = false;
+		for (int i = 0; i < 4; ++i) {
+			p = getDist(bSpheres[i + 1]);
+			d = getDist(p.x, p.y, p.z, bSpheres[i + 1]);
+			if (d <= bSpheres[i + 1].radius) {
+				was = true;
+				drawPoint(bSpheres[i + 1], 0.4);
+				printSphere(p.x, p.y, p.z, names[i], bSpheres[i + 1]);
+			}
+		}
+		if (!was) drawPoint(bSpheres[0], 0.3); //Only show big sphere if none of the others was collided with..
+	}
+	std::cout << "=======================================" << std::endl; //Formatting 
+}
+
+
 //draw callback function - this is called by glut whenever the 
 //window needs to be redrawn
 void draw(void)
@@ -491,13 +574,20 @@ void draw(void)
   
   glRotatef(yRot,0.0,1.0,0.0);
 
+ 
+ 
+  float lineLength = 10.0;
+  startPos.x = projX; startPos.y = projY; startPos.z = projZ;
+  endPos.x = projX + lineLength; endPos.y = projY + lineLength; endPos.z = projZ + lineLength;
+  drawLine();
   //draw a projectile on screen at a position
-
-  drawProjectile();
+  //drawProjectile();
   draw_tank();
   createBoundingSpheres();
-  drawPoint(bSpheres[3]);
-  potentialPenetration(projX, projY, projZ);
+
+  potentialPenetrationLine();
+  
+ // potentialPenetration(projX, projY, projZ);
   //draw the tank on screen at a position
 
 
