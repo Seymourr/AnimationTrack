@@ -35,7 +35,7 @@ void draw_wheel(float, float, float, bool);
 void compile_tank();
 void drawObj(ObjMesh *);
 void createBoundingSpheres();
-void potentialPenetration(float, float, float);
+void potentialPenetration();
 void printSphere(float, float, float, std::string, BoundingSphere);
 void drawProjectile();
 void drawLine();
@@ -410,8 +410,11 @@ void createBoundingSpheres() {
 *	Check if a point, given by coordinates, penetrates this tank.
 *	If such is the case, print some informaiton about the collision.
 */
-void potentialPenetration(float x, float y, float z) {
-	
+void potentialPenetration() {
+	float x = projX;
+	float y = projY;
+	float z = projZ;
+
 	//Penetrating tankSphere?
 	float d = getDist(x, y, z, bSpheres[0]);
 
@@ -443,12 +446,13 @@ float getDist(float x, float y, float z, BoundingSphere s) {
 }
 
 /**
-*	Return the closest point on a line between a line and a Bounding Sphere
+*	Return the closest point on a line between a line (Given by global coordinates)
+*	and a Bounding Sphere
 */
 MyPosition getDist(BoundingSphere s) {
 	MyPosition p = startPos;
 	MyPosition sp;
-	MyVector line(startPos, endPos);
+	MyVector line(startPos, endPos); //startPos and endPos are fields! (Coords change w keyinput)
 
 	sp.x = s.centerX; sp.y = s.centerY; sp.z = s.centerZ;
 
@@ -574,20 +578,19 @@ void draw(void)
   
   glRotatef(yRot,0.0,1.0,0.0);
 
- 
- 
   float lineLength = 10.0;
   startPos.x = projX; startPos.y = projY; startPos.z = projZ;
   endPos.x = projX + lineLength; endPos.y = projY + lineLength; endPos.z = projZ + lineLength;
-  drawLine();
-  //draw a projectile on screen at a position
-  //drawProjectile();
+
+
+  //drawLine();
+  drawProjectile();
+
   draw_tank();
   createBoundingSpheres();
 
-  potentialPenetrationLine();
-  
- // potentialPenetration(projX, projY, projZ);
+  //potentialPenetrationLine();
+  potentialPenetration();
   //draw the tank on screen at a position
 
 
