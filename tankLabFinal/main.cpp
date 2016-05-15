@@ -35,9 +35,17 @@ ObjMesh* tankMainGun;
 ObjMesh* tankSecondaryGun;
 ObjMesh* tankWheel;
 
+ObjMesh* tankBodyLow;
+ObjMesh* tankTurretLow;
+ObjMesh* tankMainGunLow;
+ObjMesh* tankSecondaryGunLow;
+ObjMesh* tankWheelLow;
+
 void load_tank_objs(void);
+void load_low_detail_tank_objs(void);
 void draw_wheel(float, float, float, bool);
-void compile_tank();
+void compile_tank(float, float, float);
+void compile_tank_low(float, float, float);
 void drawObj(ObjMesh *);
 void createBoundingSpheres();
 void potentialPenetration();
@@ -49,18 +57,23 @@ float getDist(float, float, float, BoundingSphere);
 void potentialPenetrationLine();
 MyPosition getDist(BoundingSphere);
 
+//Rotation of tank
 float zPos = -30.0;
 float yRot = 0.0;
 float wheelRot = 0.0;
 float turretRot = 0.0;
 float rotateMainGun = 0.0;
 float rotateSecondGun = 0.0;
+
+//Bounding spheres container
 BoundingSphere bSpheres[5];
-float projX = 0.0;
+
+//Projectile and line data
+float projX = 0.0; 
 float projY = 10.0;
 float projZ = 0.0;
-MyPosition startPos;
-MyPosition endPos;
+MyPosition startPos; //Start of a line (semi infinite)
+MyPosition endPos; //End of a line (semi infinite)
 
 int tankBodyID;
 int tankTurretID;
@@ -73,7 +86,7 @@ int tankWheelID;
 //Tank in general + tank body
 const float TANK_INIT_POSX = 0.0;
 const float TANK_INIT_POSY = 0.0;
-const float TANK_INIT_POSZ = 0.0;
+float TANK_INIT_POSZ = 0.0;
 const float TANK_SCALE = 0.1;
 
 //Tank turret
@@ -122,9 +135,25 @@ void key(unsigned char k, int x, int y);  //handle key presses
 void reshape(int width, int height);      //when the window is resized
 void init_drawing(void);                  //drawing intialisation
 
-bool showParticleEffect = false;
-bool updateParticles = false;
-//our main routine
+bool showParticleEffect = false; //Used to initiate updates in idle
+bool updateParticles = false; //See draw
+
+bool showLowResTank = false; //See main
+float zDistanceD = -260; //Threshhold for a LOD technique on the tank
+
+
+/**
+*	AUTHOR OF MAIN.CPP: Jack Shabo, jshabo@kth.se
+*	With basis given by the team of course DH2323 in the Royal Institute of Technology (Sweden)
+*
+*	<<<ABOUT THIS CODE>>>
+*
+*	This entire project simulate a tank which a user can control (to some extent)
+*	and use to simulate projectiles hitting the tank (including effects).
+*
+*	To configure different settings, please change values in either the draw() or main() function
+**/
+
 int main(int argc, char *argv[])
 {
 
@@ -139,13 +168,21 @@ int main(int argc, char *argv[])
 
   //run our own drawing initialisation routine
    initParticles(projX, projY, projZ);
-  init_drawing();
+   init_drawing();
 
+   load_tank_objs();
+   load_low_detail_tank_objs();
 
-  load_tank_objs();
-  compile_tank();
+  //Change this value to show high res tank / low res tank (initially)
+  showLowResTank = false;
+
+  if(showLowResTank) {
+	compile_tank_low(TANK_INIT_POSX, TANK_INIT_POSY, TANK_INIT_POSZ);
+  } else {
+	compile_tank(TANK_INIT_POSX, TANK_INIT_POSY, TANK_INIT_POSZ);
+
+  }
  
-
   //tell glut the names of our callback functions point to our 
   //functions that we defined at the start of this file
   glutReshapeFunc(reshape);
@@ -164,6 +201,9 @@ int main(int argc, char *argv[])
   return 0;
 }
 
+/**
+*	Draw a given mesh onto the screen
+*/
 void drawObj(ObjMesh * obj) {
 	for (int i = 0; i < obj->m_iNumberOfFaces; ++i) {
 		ObjFace * objF = &obj->m_aFaces[i];
@@ -182,6 +222,9 @@ void drawObj(ObjMesh * obj) {
 	}
 }
 
+/**
+*	Load in textures for a normal detailed tank
+*/
 void load_tank_objs(void)
 {
   tankBody = LoadOBJ(".\\tankobjs\\tankbody.obj");
@@ -198,11 +241,34 @@ void load_tank_objs(void)
   SetTextures(tankBody->m_iMeshID, NULL, ".\\tankobjs\\texture.tga");
 }
 
-
-void compile_tank()
+/**
+*	Load in textures for a low detailed tank
+*/
+void load_low_detail_tank_objs(void)
 {
+  tankBodyLow = LoadOBJ(".\\tankobjs\\tankbodyLow.obj");
+	tankBodyID = glGenLists(1);
+  tankTurretLow = LoadOBJ(".\\tankobjs\\tankturretLow.obj");
+	tankTurretID = glGenLists(1);
+  tankMainGunLow = LoadOBJ(".\\tankobjs\\tankmaingunLow.obj");
+	tankMainGunID = glGenLists(1);
+  tankSecondaryGunLow = LoadOBJ(".\\tankobjs\\tanksecondarygunLow.obj");
+	tankSecondGunID = glGenLists(1);
+  tankWheelLow = LoadOBJ(".\\tankobjs\\tankwheelLow.obj");
+	tankWheelID = glGenLists(1);
+
+  SetTextures(tankBodyLow->m_iMeshID, NULL, ".\\tankobjs\\texture.tga");
+}
+
+/**
+*	Compile the tank to use a normal detailed mesh (textured), with the position xyz
+*/
+void compile_tank(float x, float y, float z)
+{
+	glEnable(GL_TEXTURE_2D);
+	glEnable(GL_LIGHTING);
 	glNewList(tankBodyID, GL_COMPILE);
-		glTranslatef(TANK_INIT_POSX, TANK_INIT_POSY, TANK_INIT_POSZ);
+		glTranslatef(x, y, z);
 		glScalef(TANK_SCALE, TANK_SCALE, TANK_SCALE);		//reduce the size of the tank on screen
 		drawObj(tankBody);
 	glEndList();
@@ -227,10 +293,49 @@ void compile_tank()
 	glEndList();
 }
 
+/**
+*	Compile the tank to use a low detailed mesh, with the position xyz
+*/
+void compile_tank_low(float x, float y, float z)
+{
+	glDisable(GL_TEXTURE_2D);
+	glDisable(GL_LIGHTING);
+	glNewList(tankBodyID, GL_COMPILE);
+		glTranslatef(x, y, z);
+		glScalef(TANK_SCALE, TANK_SCALE, TANK_SCALE);		//reduce the size of the tank on screen
+		glColor3f(0.5f, 0.35f, 0.05f);
+		DrawOBJ(tankBodyLow->m_iMeshID);
+	glEndList();
 
+	glNewList(tankWheelID, GL_COMPILE);
+		glColor3f(0.2, 0.2, 0.2);
+		DrawOBJ(tankWheelLow->m_iMeshID);
+	glEndList();
+
+
+	glNewList(tankTurretID, GL_COMPILE);
+		glColor3f(0.1, 0.1, 0.1);
+		DrawOBJ(tankTurretLow->m_iMeshID);
+	glEndList();
+
+
+	glNewList(tankMainGunID, GL_COMPILE);
+		glColor3f(0.05, 0.05, 0.05);
+		DrawOBJ(tankMainGunLow->m_iMeshID);
+	glEndList();
+
+
+	glNewList(tankSecondGunID, GL_COMPILE);
+		glColor3f(0.05, 0.05, 0.05);
+		DrawOBJ(tankSecondaryGunLow->m_iMeshID);
+	glEndList();
+}
+
+/**
+*	Draw the entire tank onto the scene by calling various functions and display lists 
+*/
 void draw_tank()
 {
-
 	glPushMatrix();
 
 		glCallList(tankBodyID);
@@ -277,14 +382,12 @@ void draw_tank()
 		
 			glPopMatrix();
 		glPopMatrix();
-
-	
-
 	glPopMatrix();
-
-
 }
 
+/**
+*	Draw a tank wheel at the given xyz coordinates, with the given rotation value
+*/
 void draw_wheel(float x, float y, float z, bool rotate) {
 	glPushMatrix();
 		glTranslatef(x, y, z);
@@ -298,6 +401,9 @@ void draw_wheel(float x, float y, float z, bool rotate) {
 	glPopMatrix();
 }
 
+/**
+*	Translate the given mesh m with xyz coords and scale it down (possibly)
+*/
 void translateMesh(ObjMesh &m, float x, float y, float z, float scale) {
 	for (int i = 0; i < m.m_iNumberOfVertices; ++i) {
 		m.m_aVertexArray[i].x += x*scale;
@@ -306,6 +412,9 @@ void translateMesh(ObjMesh &m, float x, float y, float z, float scale) {
 	}
 }
 
+/**
+*	Rotate the given mesh m with angle, xyz coords and scale it down (possibly)
+*/
 void rotateMesh(ObjMesh &m, float angle, float x, float y, float z, float scale) {
 	MyVector axis(x*scale, y*scale, z*scale);
 	MyQuat q(angle, axis);
@@ -325,6 +434,9 @@ void rotateMesh(ObjMesh &m, float angle, float x, float y, float z, float scale)
 	}
 }
 
+/**
+*	Scale the given mesh with s
+*/
 void scaleMesh(ObjMesh &m, float s) {
 	for (int i = 0; i < m.m_iNumberOfVertices; ++i) {
 		m.m_aVertexArray[i].x *= s;
@@ -333,6 +445,9 @@ void scaleMesh(ObjMesh &m, float s) {
 	}
 }
 
+/**
+*	Save vertex information about a mesh m into a vector v
+*/
 std::vector<ObjVertex> saveVert(const ObjMesh m) {
 	std::vector<ObjVertex> v;
 	for (int i = 0; i < m.m_iNumberOfVertices; ++i) {
@@ -345,6 +460,9 @@ std::vector<ObjVertex> saveVert(const ObjMesh m) {
 	return v;
 }
 
+/**
+*	Recover saved vertex information v about a mesh m back to m
+*/
 void recoverVert(std::vector<ObjVertex> v, ObjMesh m) {
 	for (int i = 0; i < m.m_iNumberOfVertices; ++i) {
 		m.m_aVertexArray[i].x = v[i].x;
@@ -353,7 +471,9 @@ void recoverVert(std::vector<ObjVertex> v, ObjMesh m) {
 	}
 }
 
-//TODO (Or maybe not..?): Boundingspheres for wheels
+/**
+*	Create bounding spheres that follow the tanks movement (Appears on collision with projectiles)
+*/
 void createBoundingSpheres() {
 		ObjMesh tankMesh[4];
 		
@@ -370,7 +490,7 @@ void createBoundingSpheres() {
 
 		tankMesh[3] = *tankSecondaryGun;
 
-
+		//Translate all the meshes beforehand to the tanks position/transformation/rotation/scale properties
 		for (int i = 0; i < 4; ++i) {
 			translateMesh(tankMesh[i], TANK_INIT_POSX, TANK_INIT_POSY, TANK_INIT_POSZ, 1.0);
 			scaleMesh(tankMesh[i], TANK_SCALE);
@@ -388,9 +508,7 @@ void createBoundingSpheres() {
 		translateMesh(tankMesh[3], TANK_SECONDG_TX, TANK_SECONDG_TY, TANK_SECONDG_TZ, TANK_SCALE);
 		rotateMesh(tankMesh[3], rotateSecondGun, TANK_SECONDG_RX, TANK_SECONDG_RY, TANK_SECONDG_RZ, TANK_SCALE);
 
-		BoundingSphere tankSphere = BoundingSphere();
-		
-		
+		BoundingSphere tankSphere = BoundingSphere();	
 		tankSphere.createBoundingSphere(tankMesh, 4);
 
 		BoundingSphere tankBodySphere = BoundingSphere();
@@ -423,7 +541,6 @@ void createBoundingSpheres() {
 		recoverVert(v2, *tankTurret);
 		recoverVert(v3, *tankMainGun);
 		recoverVert(v4, *tankSecondaryGun);
-	
 }
 
 /**
@@ -442,7 +559,7 @@ void potentialPenetration() {
 		doParticle = true;
 		printSphere(x, y, z, "tank", bSpheres[0]);
 		//Check subparts
-		bool was = false;
+		bool was = false; //Was any of the inner spheres collided with?
 		for(int i = 0; i < 4; ++i) {
 			d = getDist(x, y, z, bSpheres[i + 1]);
 			if (d <= bSpheres[i + 1].radius) { 
@@ -491,6 +608,7 @@ MyPosition getDist(BoundingSphere s) {
 
 	return res;
 }
+
 /**
 *	Print information about a point colliding with a Bounding Sphere
 */
@@ -526,8 +644,6 @@ void drawProjectile() {
 */
 void drawLine()
 {
-	
-
 	glPushMatrix();
 		float space = 0.25;
 		glBegin(GL_LINES);
@@ -559,7 +675,7 @@ void drawPoint(BoundingSphere s, float transparency) {
 
 /**
 *	Tests whether a given line intersect the tanks bounding spheres.
-	If such is the case, print some information about the spheres
+*	If such is the case, print some information about the spheres
 */
 void potentialPenetrationLine() {
 	//Penetrating tankSphere?
@@ -572,7 +688,7 @@ void potentialPenetrationLine() {
 		doParticle = true;
 		printSphere(p.x, p.y, p.z, "tank", bSpheres[0]);
 		//Check subparts
-		bool was = false;
+		bool was = false; //Was any of the inner spheres collided with?
 		for (int i = 0; i < 4; ++i) {
 			p = getDist(bSpheres[i + 1]);
 			d = getDist(p.x, p.y, p.z, bSpheres[i + 1]);
@@ -587,13 +703,14 @@ void potentialPenetrationLine() {
 	}
 
 	if(doParticle && updateParticles) {
-		drawParticles(p.x, p.y, p.z);
+		drawParticles(p.x, p.y, p.z); //Show "sparks"
 	}
 }
 
 
-//draw callback function - this is called by glut whenever the 
-//window needs to be redrawn
+/**
+*	Draw callback function - this is called by glut whenever the window needs to be redrawn
+*/
 void draw(void)
 {
   //clear the current window
@@ -607,33 +724,36 @@ void draw(void)
   
   glRotatef(yRot,0.0,1.0,0.0);
 
-  float lineLength = 10.0;
-  startPos.x = projX; startPos.y = projY; startPos.z = projZ;
-  endPos.x = projX + lineLength; endPos.y = projY + lineLength; endPos.z = projZ + lineLength;
+  float lineLength = 10.0; //"Semi-infinite" line length
 
+  //Used in drawing functions
+  startPos.x = projX; startPos.y = projY; startPos.z = projZ; 
+  endPos.x = projX + lineLength; endPos.y = projY + lineLength; endPos.z = projZ + lineLength;
 
   //drawLine();
   drawProjectile();
 
   draw_tank();
-  createBoundingSpheres();
 
-  //potentialPenetrationLine();
-  potentialPenetration();
-  //draw the tank on screen at a position
-
-
+  if(!showLowResTank) {
+	  createBoundingSpheres();
+	    //potentialPenetrationLine();
+	  potentialPenetration();
+  }
+  
   //Change this variable to show/not show particle effects! 
   //(Control variable)
    updateParticles = true;
+
   //flush what we've drawn to the buffer
   glFlush();
   //swap the back buffer with the front buffer
   glutSwapBuffers();
 }
 
-//idle callback function - this is called when there is nothing 
-//else to do
+/**
+*	Idle callback function - this is called when there is nothing else to do
+*/
 void idle(void)
 {
   //this is a good place to do animation
@@ -650,67 +770,90 @@ void idle(void)
 
 	glutPostRedisplay();
 	}
+	
+	bool wasLow = false;
+	if(TANK_INIT_POSZ <= zDistanceD) {
+		//Switch to low quality model
+		compile_tank_low(TANK_INIT_POSX, TANK_INIT_POSY, TANK_INIT_POSZ);
+		wasLow = true;
+	} else if(TANK_INIT_POSZ > zDistanceD && wasLow) {
+		wasLow = false;
+		compile_tank(TANK_INIT_POSX, TANK_INIT_POSY, TANK_INIT_POSZ);
+	} else {
+		compile_tank(TANK_INIT_POSX, TANK_INIT_POSY, TANK_INIT_POSZ);
+	}
 }
 
-//key callback function - called whenever the user presses a 
-//key
+/**
+*	Key callback function - called whenever the user presses a key
+*/
 void key(unsigned char k, int x, int y)
 {
   switch(k)
   {
-    case 'h':
+    case 'h': //Move the camera away from the tank
 	    zPos--;
 	    break;
-	case 'y':
+	case 'y': //Move the camera closer to the tank
 	    zPos++;
 	    break;
-	case 'r':
+	case 'r':  //Rotate the tank to the right
 		yRot++;
 		break;
-	case 't':
+	case 't': //Rotate the tank to the left
 		yRot--;
 		break;
-	case 'w':
+	case 'w': //Spin the wheels alone forward
 		wheelRot += 5;
 		break;
-	case 's':
+	case 's': //Spin the wheels alone backwards
 		wheelRot -= 5;
 		break;
-	case 'a':
+	case 'a': //Rotate the turret to the right
 		turretRot++;
 		break;
-	case 'd':
+	case 'd': //Rotate the turret to the left
 		turretRot--;
 		break;
-	case 'q':
-		if (rotateMainGun < 10.0) rotateMainGun++; //Limit max height (due to mesh limits)
+	case 'q': //Rotate the main gun up (Limited)
+		if (rotateMainGun < 10.0) rotateMainGun++; 
 		break;
-	case 'e':
+	case 'e': //Rotate the main gun down (Limited)
 		if (rotateMainGun > 0.0) rotateMainGun--;
 		break;
-	case 'z':
+	case 'z': //Rotate the second gun to the right (Limited)
 		if(rotateSecondGun < 45) rotateSecondGun +=2;
 		break;
-	case 'x':
+	case 'x': //Rotate the second gun to the left (Limited)
 		if (rotateSecondGun > -45) rotateSecondGun -= 2;
 		break;
-	case '8':
+	case '8': //Steer the projectile / line up
 		projY++;
 		break;
-	case '2':
+	case '2': //Steer the projectile / line down
 		projY--;
 		break;
-	case '6':
+	case '6': //Steer the projectile / line to the right
 		projX++;
 		break;
-	case '4':
+	case '4': //Steer the projectile / line to the left
 		projX--;
 		break;
-	case '9':
+	case '9': //Steer the projectile / line closer to the camera
 		projZ++;
 		break;
-	case '7':
+	case '7': //Steer the projectile / line further away from the camera
 		projZ--;
+		break;
+	case 'm': //Move the entire tank forwards
+		if(TANK_INIT_POSZ < 0.0f) {
+			wheelRot += 5;
+			TANK_INIT_POSZ += 5;
+		}
+		break;
+	case 'n': //Move the entire tank backwards
+		wheelRot -= 5;
+		TANK_INIT_POSZ -= 5;
 		break;
     case 27: //27 is the ASCII code for the ESCAPE key
       exit(0);
@@ -719,7 +862,9 @@ void key(unsigned char k, int x, int y)
   glutPostRedisplay();
 }
 
-//reshape callback function - called when the window size changed
+/**
+*	Reshape callback function - called when the window size changed
+*/
 void reshape(int width, int height)
 {
   //set the viewport to be the same width and height as the window
@@ -731,13 +876,15 @@ void reshape(int width, int height)
   //set up our projection type
   //we'll be using a perspective projection, with a 90 degree 
   //field of view
-  gluPerspective(45.0, (float) width / (float) height, 1.0, 100.0);
+  gluPerspective(45.0, (float) width / (float) height, 1.0, 400.0);
   //redraw the view during resizing
   draw();
 }
 
-//set up OpenGL before we do any drawing
-//this function is only called once at the start of the program
+/**
+*	Set up OpenGL before we do any drawing
+*	This function is only called once at the start of the program
+*/
 void init_drawing(void)
 {
   //blend colours across the surface of the polygons
@@ -767,12 +914,14 @@ void init_drawing(void)
   glEnable(GL_LIGHT1);
   glEnable(GL_LIGHTING);
 
-
-
   glEnable(GL_COLOR_MATERIAL);
   glEnable(GL_TEXTURE_2D);
 
 }
+
+/**
+*	Initialize all active particlesystems with colors, positions and shapes / behaviors
+*/
 void initParticles(float x, float y, float z)
 {
 	g_dCurTime     = timeGetTime();
@@ -804,10 +953,12 @@ void initParticles(float x, float y, float z)
 
 }
 
+/**
+*	Draw particles of the current particlesystem at the provided xyz coordinates
+*/
 void drawParticles(float x, float y, float z) {
 		g_pParticleSystems[0]->SetPosition(MyVector(x, y, z));
 		glEnable( GL_DEPTH_TEST );
-   // glDepthMask( GL_FALSE );
 
 		g_pParticleSystems[g_nActiveSystem]->RenderSimple();
 		showParticleEffect = true;
