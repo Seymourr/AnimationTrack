@@ -23,6 +23,10 @@ void init_drawing(void);                  //drawing intialisation
 
 int toDraw = 1;
 
+/**
+*	Draw a vector from startPos, with length and direction (end point) specified in v1.
+*	Only works for 2D coordinates (!).
+*/
 void DrawVector(Position& startPos, Vector& v1)
 {
 	//draw the vector v1 starting from position startPos
@@ -52,6 +56,9 @@ void DrawVector(Position& startPos, Vector& v1)
 	glPopMatrix();
 }
 
+/**
+*	Draw a dashed line between the (2D) coordinates given in startPos and v1 (direction).
+*/
 void DrawDashed(Position& startPos, Vector& v1)
 {
 	//draw the vector v1 starting from position startPos
@@ -71,14 +78,13 @@ void DrawDashed(Position& startPos, Vector& v1)
 	float dashLen = length/dashAmount; 
 	glBegin(GL_LINES);
 	
-	
+	//Only draw out half of the sub-lines (The ODD ones)
 	for (int i = 0; i < dashAmount; i++) {
 		if (i % 2 != 0) { //ODD
 			glVertex3f(0.0, 0.0 + i * dashLen, 0.0);
 			glVertex3f(0.0, dashLen + i*dashLen, 0.0);
 		}
 	}
-
 	glEnd();
 	glPopMatrix();
 }
@@ -142,7 +148,6 @@ void Answer4() {
 	DrawVector(p, v2);
 }
 
-
 void Answer5() {
 	Vector v1(5.0, 4.0, 0.0); 
 	Vector v2(3.0, 9.0, 0.0); 
@@ -153,7 +158,7 @@ void Answer5() {
 	
 	Vector res = v2;
 	res.normalise();
-	float disA = res.getDotProduct(v1);
+	float disA = res.getDotProduct(v1); //Project by dotproducting a unit vector
 
 	res = v2;
 	res.setMagnitude(disA);
@@ -219,11 +224,9 @@ void Answer6() {
 	res = res / l2.getMagnitude();
 	res = RAD2DEG(acos(res));
 	std::cout << "The angle between the lines is " << res << " degrees" << std::endl;
-
 }
 
 void Answer7() {
-
 	glPointSize(6.0);
 	glColor3f(1.0, 1.0, 1.0);
 
@@ -233,8 +236,6 @@ void Answer7() {
 			glVertex3f(8.0, 3.0, 0.0); //Mark the point on the screen
 		glEnd();
 	glPopMatrix();
-
-
 
 	Position p; //The point
 	p.x = 8.0; p.y = 3.0; p.z = 0.0;
@@ -282,7 +283,7 @@ void Answer7() {
 	glEnd();
 	glPopMatrix();
 }
-//our main routine
+
 int main(int argc, char *argv[])
 {
   //Initialise Glut and create a window
@@ -419,8 +420,9 @@ origin.x = origin.y = origin.z = 0.0;
   glutSwapBuffers();
 }
 
-//idle callback function - this is called when there is nothing 
-//else to do
+/**
+*	Idle callback function - this is called when there is nothing else to do
+*/
 void idle(void)
 {
   //this is a good place to do animation
@@ -428,8 +430,9 @@ void idle(void)
   //idle() empty
 }
 
-//key callback function - called whenever the user presses a 
-//key
+/**
+*	Key callback function - called whenever the user presses a key
+*/
 void key(unsigned char k, int x, int y)
 {
   switch(k)
@@ -439,14 +442,14 @@ void key(unsigned char k, int x, int y)
       break;
   }
   if (49 >= 1 && k <= 55) {
-	toDraw = k - 48;
-
+	toDraw = k - 48; //User pressed keys 1-7 
 	glutPostRedisplay();
-
   }
 }
 
-//reshape callback function - called when the window size changed
+/**
+*	Reshape callback function - called when the window size changed
+*/
 void reshape(int width, int height)
 {
   //set the viewport to be the same width and height as the window
@@ -463,8 +466,10 @@ void reshape(int width, int height)
   DisplayScene();
 }
 
-//set up OpenGL before we do any drawing
-//this function is only called once at the start of the program
+/**
+*	Set up OpenGL before we do any drawing.
+*	This function is only called once at the start of the program
+*/
 void init_drawing(void)
 {
   //blend colours across the surface of the polygons

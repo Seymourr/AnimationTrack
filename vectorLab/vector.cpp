@@ -2,27 +2,29 @@
 
 using namespace MyOGLProg;
 
+//Default constructor
 Vector::Vector(void)
 {
 	this->x = this->y = this->z = 0.0;
 }
 
+//Constructor given coordinates (XYZ)
 Vector::Vector(float x, float y, float z)
 {
 	this->x = x; this->y = y; this->z = z;
 }
 
+//Constructor given two positions
 Vector::Vector(Position& start, Position& end)
 {
-	//initialise this vector from two positions
 	this->x = end.x - start.x;
 	this->y = end.y - start.y;
 	this->z = end.z - start.z;
 }
 
+//Add another vector to this vector and return the resulting vector
 Vector Vector::addTo(const Vector &other) const
 {
-	//add this vector to other and return the result
 	Vector result;
 	result.x = other.x + this->x;
 	result.y = other.y + this->y;
@@ -31,9 +33,9 @@ Vector Vector::addTo(const Vector &other) const
 	return result;
 }
 
+//Subtract another vector to this vector and return the resulting vector
 Vector Vector::subtractFrom(const Vector &other) const
 {
-	//subtract this vector from other and return the result
 	Vector result;
 	result.x = other.x - this->x;
 	result.y = other.y - this->y;
@@ -41,10 +43,11 @@ Vector Vector::subtractFrom(const Vector &other) const
 
 	return result;
 }
-		
+
+//Return the magnitude (length) of the vector
 float Vector::getMagnitude(void) const
 {
-	//get the length of the vector
+	
 	float result;
 	float xPow = pow(this->x, 2.0);
 	float yPow = pow(this->y, 2.0);
@@ -54,18 +57,19 @@ float Vector::getMagnitude(void) const
 	return result;
 }
 
+//Set the magnitude (length) of the vector
 void Vector::setMagnitude(const float m)
 {
-	//set the length of the vector
 	this->normalise();
 	this->x = this->x * m;
 	this->y = this->y * m;
 	this->z = this->z * m;
 }
 	
+//Return the dot product between this vector and the other given one
 float Vector::getDotProduct(const Vector &other) const
 {
-	//return the dot product between this vector and other
+	
 	float result;
 	float xx = other.x * this->x;
 	float yy = other.y * this->y;
@@ -74,10 +78,10 @@ float Vector::getDotProduct(const Vector &other) const
 	return result;
 }
 
+//Return the cross product between this vector and the other
 Vector Vector::getCrossProduct(const Vector &other) const
 {
-	//return the cross product between this vector and other
-	//A = this, B = other ????
+	//RHS ? LHS ? Order matter! (Call order)
 	Vector result;
 	result.x = other.y * this->z - other.z * this->y;
 	result.y = other.z * this->x - other.x * this->z;
@@ -85,12 +89,11 @@ Vector Vector::getCrossProduct(const Vector &other) const
 	return result;
 }
 
+//Normalise this vector (set its length to 1)
 void Vector::normalise(void)
 {
-	//normalise this vector (set its length to 1)
 	float length = this->getMagnitude();
 	this->x = this->x / length;
 	this->y = this->y / length;
 	this->z = this->z / length;
 }
-
