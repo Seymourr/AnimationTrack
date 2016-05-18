@@ -1,15 +1,19 @@
 #include "MyVector.h"
 
+
+//Default constructor
 MyVector::MyVector(void)
 {
 	this->x = this->y = this->z = 0.0;
 }
 
+//Constructor given coordinates (XYZ)
 MyVector::MyVector(float x, float y, float z)
 {
 	this->x = x; this->y = y; this->z = z;
 }
 
+//Constructor given two positions
 MyVector::MyVector(MyPosition& start, MyPosition& end)
 {
 	this->x = end.x - start.x;
@@ -17,6 +21,7 @@ MyVector::MyVector(MyPosition& start, MyPosition& end)
 	this->z = end.z - start.z;
 }
 
+//Add another vector to this vector and return the resulting vector
 MyVector MyVector::addTo(const MyVector &other) const
 {
 	MyVector result;
@@ -27,6 +32,7 @@ MyVector MyVector::addTo(const MyVector &other) const
 	return result;
 }
 
+//Subtract another vector to this vector and return the resulting vector
 MyVector MyVector::subtractFrom(const MyVector &other) const
 {
 	MyVector result;
@@ -37,6 +43,7 @@ MyVector MyVector::subtractFrom(const MyVector &other) const
 	return result;
 }
 		
+//Return the magnitude (length) of the vector
 float MyVector::getMagnitude(void) const
 {
 	float result;
@@ -48,6 +55,7 @@ float MyVector::getMagnitude(void) const
 	return result;
 }
 
+//Scale the xyz positions of this vector by scalar m
 void MyVector::uniformScale(const float m)
 {
 	this->x = this->x * m;
@@ -55,6 +63,7 @@ void MyVector::uniformScale(const float m)
 	this->z = this->z * m;
 }
 
+//Normalise this vector (set its length to 1)
 void MyVector::normalise(void)
 {
 	float length = this->getMagnitude();
@@ -63,6 +72,7 @@ void MyVector::normalise(void)
 	this->z = this->z / length;
 }
 
+//Set the magnitude (length) of the vector
 void MyVector::setMagnitude(const float m)
 {
 	if (this->getMagnitude() > 0.0)
@@ -72,6 +82,7 @@ void MyVector::setMagnitude(const float m)
 	}
 }
 	
+//Return the dot product between this vector and the other given one
 float MyVector::getDotProduct(const MyVector &other) const
 {
 	float result = 0.0;
@@ -82,6 +93,7 @@ float MyVector::getDotProduct(const MyVector &other) const
 	return result;
 }
 
+//Return the cross product between this vector and the other
 MyVector MyVector::getCrossProduct(const MyVector &other) const
 {
 	MyVector result;
@@ -90,6 +102,7 @@ MyVector MyVector::getCrossProduct(const MyVector &other) const
 	result.z = this->x * other.y - this->y * other.x;
 	return result;
 }
+
 
 MyVector MyVector::operator + ( const MyVector &other )
 {

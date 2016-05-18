@@ -1,11 +1,13 @@
 #include "myQuat.h"
 
+
+//Default constructor
 MyQuat::MyQuat() {
 	this->w = 0.0;
 	this->v = MyVector();
 }
 
-//create from axis, angle
+//Create from axis, angle
 MyQuat::MyQuat(float angleDeg, MyVector &axis) {
 	axis.normalise();
 	float rad = DEG2RAD(angleDeg/2);
@@ -14,23 +16,24 @@ MyQuat::MyQuat(float angleDeg, MyVector &axis) {
 	this->v.y = axis.y * sin(rad);
 	this->v.z = axis.z * sin(rad);
 }	
-//create from position
+
+//Create from position
 MyQuat::MyQuat(MyPosition &p) {
 	this->w = 0;
 	MyVector v(p.x, p.y, p.z);
-//	v.normalise(); ?
 	this->v = v;
 }
 
-
+//Add this quat to another quat and return the result
 MyQuat MyQuat::addTo(const MyQuat &other) const{
 	MyQuat res;
 	res.w = this->w + other.w;
 	res.v = this->v.addTo(other.v);
-//	res.normalise(); //?
+
 	return res;
 }
 
+//Multiply this quat by another quat and return the result
 MyQuat MyQuat::multiplyBy(const MyQuat &other) const {
 
 	MyQuat res;
@@ -44,11 +47,10 @@ MyQuat MyQuat::multiplyBy(const MyQuat &other) const {
 	res.v = a.addTo(b);
 	res.v = res.v.addTo(c);
 
-	//res.normalise();
-	
 	return res;
 }
 
+//Get the magnitude (length) of this quat
 float MyQuat::getMagnitude() const {
 	
 	float wPow = pow(this->w, 2.0);
@@ -60,6 +62,7 @@ float MyQuat::getMagnitude() const {
 	return result;
 }
 
+//Normalize this quat (put its length to 1)
 void MyQuat::normalise() {
 	float length = this->getMagnitude();
 	this->w = this->w / length;
@@ -68,7 +71,8 @@ void MyQuat::normalise() {
 	this->v.z = this->v.z / length;
 }
 
-MyQuat MyQuat::getConjugate(void) const {
+//Return the conjuage (negatived version) of this quat
+MyQuat MyQuat::getConjugate() const {
 	MyQuat res;
 	res.w = this->w;
 	res.v = this->v;
@@ -77,7 +81,9 @@ MyQuat MyQuat::getConjugate(void) const {
 	res.v.z *= -1.0;
 	return res;
 }
-MyQuat MyQuat::getInverse(void) const {
+
+//Return the inverse of this quat
+MyQuat MyQuat::getInverse() const {
 	MyQuat res = this->getConjugate();
 	float len = pow(this->w, 2.0)
 		+ pow(this->v.x, 2.0)
@@ -91,7 +97,8 @@ MyQuat MyQuat::getInverse(void) const {
 	return res;
 }
 
-MyMatrix MyQuat::convertToRotationMatrix(void) const{
+//Convert this quat to a rotation matrix specified by complex numbers and real value w
+MyMatrix MyQuat::convertToRotationMatrix() const{
 	static GLfloat res[16] =
 	{
 		1.0,0.0,0.0,0.0,
@@ -118,4 +125,3 @@ MyMatrix MyQuat::convertToRotationMatrix(void) const{
 	tmp.setGLMatrix();
 	return resM;
 }
-

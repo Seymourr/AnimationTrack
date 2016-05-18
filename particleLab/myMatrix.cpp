@@ -1,11 +1,13 @@
 #include "myMatrix.h"
 
 
+//Default constructor
 MyMatrix::MyMatrix(void)
 {
 	this->loadIdentity();
 }
 
+//Load identity matrix into this object
 void MyMatrix::loadIdentity(void)
 {
 	static GLfloat identityMatrix[16] =
@@ -18,42 +20,44 @@ void MyMatrix::loadIdentity(void)
 	memcpy(this->myMatrix, identityMatrix, sizeof(identityMatrix));
 }
 
-void MyMatrix::getGLMatrix(GLenum pname) 
 // Returns any matrix (used by other functions: do use directly)
+void MyMatrix::getGLMatrix(GLenum pname) 
 {
 	//remember, you should have a GLfloat myMatrix[16]; defined
 	//as a member of your class (see above)
 	glGetFloatv(pname,this->myMatrix);
 }
 
-void MyMatrix::getGLModelviewMatrix(void) 
 // Returns the current modelview matrix
+void MyMatrix::getGLModelviewMatrix(void) 
 {
 	getGLMatrix(GL_MODELVIEW_MATRIX);
 }
 
-void MyMatrix::getGLProjectionMatrix(void) 
 // Returns the current projection matrix
+void MyMatrix::getGLProjectionMatrix(void) 
 {
 	getGLMatrix(GL_PROJECTION_MATRIX);
 }
 
-void MyMatrix::multiplyGLMatrix(void) 
 // Multiply our matrix by the current OpenGL one
+void MyMatrix::multiplyGLMatrix(void) 
 //Remember to first set the current GL matrix by using the command:
 // glMatrixMode()!!!
 {
 	glMultMatrixf(this->myMatrix);
 }
 
-void MyMatrix::setGLMatrix(void)
 // Set the OpenGL matrix to that currently specified in myMatrix
+void MyMatrix::setGLMatrix(void)
 //Remember to first set the current GL matrix by using the command:
 // glMatrixMode()!!!
 {
+	
 	glLoadMatrixf(this->myMatrix);
 }
 
+//Translate the matrix currently loaded in opengl with the translation matrix created by xyz
 void MyMatrix::translateMatrix(float x, float y, float z) {
 	//assuming matrix is 4x4..
 	this->loadIdentity();
@@ -64,6 +68,7 @@ void MyMatrix::translateMatrix(float x, float y, float z) {
 	this->multiplyGLMatrix();
 }
 
+//Rotate the matrix currently loaded in opengl with the degree given by the parameter
 void MyMatrix::rotateZAxis(int degrees) {
 	float rad = DEG2RAD(degrees);
 
@@ -81,6 +86,7 @@ void MyMatrix::rotateZAxis(int degrees) {
 	this->multiplyGLMatrix();
 }
 
+//Print out this matrix in a nice, readable way
 void MyMatrix::printMatrix() {
 	std::cout << std::endl;
 	int cnt = 0;

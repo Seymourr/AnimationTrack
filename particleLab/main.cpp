@@ -23,7 +23,7 @@
 #include "particleSystem.h"
 
 //define the particle systems
-int g_nActiveSystem = 4;
+int g_nActiveSystem = 6;
 CParticleSystem *g_pParticleSystems[7];
 void initParticles( void );
 float  g_fElpasedTime;
