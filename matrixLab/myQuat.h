@@ -12,8 +12,8 @@ class MyQuat
 {
 	public:
 		MyQuat(void);
-		MyQuat(float angleDeg, MyVector &axis);	//create from axis, angle
-		MyQuat(MyPosition &p);	//create from position
+		MyQuat(float angleDeg, MyVector &axis);	
+		MyQuat(MyPosition &p);	
 		
 		~MyQuat(void){;}
 

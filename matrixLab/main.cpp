@@ -32,7 +32,9 @@ void DrawLine(MyPosition&, MyPosition&);
 void drawBasis(void);
 void drawOrig(void);
 
-
+/**
+*	Draw a square 2 units long/high at the current translated coordinates. 
+*/
 void draw_square(void) {
 	glBegin(GL_POLYGON);
 		glColor3f(1.0, 0.0, 0.0);
@@ -46,7 +48,9 @@ void draw_square(void) {
 	glEnd();
 }
 
-//draw a line between the specified positions, and a big dot at the end
+/**
+*	Draw a line between the specified positions, and a big dot at the end
+*/
 void DrawLine(MyPosition& startPos, MyPosition& endPos)
 {
 	glPushMatrix();
@@ -68,10 +72,12 @@ void DrawLine(MyPosition& startPos, MyPosition& endPos)
 	glPopMatrix();
 }
 
+/**
+*	Draw the vector v1 starting from position startPos
+*	This function will only work as long as the z coordinate for both positions is zero
+*/
 void DrawVector(MyPosition& startPos, MyVector& v1)
 {
-	//draw the vector v1 starting from position startPos
-	//this function will only work as long as the z coordinate for both positions is zero
 	float length = sqrt((v1.x * v1.x) + (v1.y * v1.y) + (v1.z * v1.z));
 	MyVector v;
 	if (length > 0.0) { v.x = v1.x / length; v.y = v1.y / length; v.z = v1.z / length; }
@@ -97,41 +103,46 @@ void DrawVector(MyPosition& startPos, MyVector& v1)
 	glPopMatrix();
 }
 
+/**
+*	Draw blue horizontal and vertical dashed lines one unit long along the y and x axis.
+*/
 void drawBasis() {
 	float dashAmount = 10;
 	float dashLen = 0.1;
-
 
 	//draw a blue horizontal line, one unit long
 	glLineWidth(3.0);
 	glColor3f(0.0, 0.0, 1.0);
 	glPushMatrix();
 		glTranslatef(0.0, 0.0, 0.0);
-			glBegin(GL_LINES);
-			for (int i = 0; i < dashAmount; i++) {
-				if (i % 2 != 0) { //ODD
-					glVertex2f(0.0 + i *dashLen, 0.0);
-					glVertex2f(dashLen + i*dashLen, 0.0);
-				}
-			}		
-			glEnd();
+		glBegin(GL_LINES);
+		for (int i = 0; i < dashAmount; i++) {
+			if (i % 2 != 0) { //ODD
+				glVertex2f(0.0 + i *dashLen, 0.0);
+				glVertex2f(dashLen + i*dashLen, 0.0);
+			}
+		}		
+		glEnd();
 	glPopMatrix();
 
 	//draw a blue vertical line, one unit high
 	glLineWidth(3.0);
 	glColor3f(0.0, 0.0, 1.0);
 	glPushMatrix();
-		glBegin(GL_LINES);
-		for (int i = 0; i < dashAmount; i++) {
-			if (i % 2 != 0) { //ODD
-				glVertex2f(0.0, 0.0 + i *dashLen);
-				glVertex2f(0.0, dashLen + i*dashLen);
-			}
+	glBegin(GL_LINES);
+	for (int i = 0; i < dashAmount; i++) {
+		if (i % 2 != 0) { //ODD
+			glVertex2f(0.0, 0.0 + i *dashLen);
+			glVertex2f(0.0, dashLen + i*dashLen);
 		}
-		glEnd();
+	}
+	glEnd();
 	glPopMatrix();
 }
 
+/**
+*	Draw a big dot marking the origin
+*/
 void drawOrig() {
 	glPointSize(8.0);
 	glColor3f(1.0, 1.0, 1.0);
@@ -143,18 +154,28 @@ void drawOrig() {
 	glPopMatrix();
 }
 
+/**
+*	Translate the opengl modelview matrix manually using own matrix class
+*/
 void manualTranslation(float x, float y, float z) {
 	MyMatrix v;
 	glMatrixMode(GL_MODELVIEW_MATRIX);
 	v.translateMatrix(x, y, z);
 }
 
+/**
+*	Rotate the opengl modelview matrix manually using own matrix class
+*/
 void manualZrotation(int degrees) {
 	MyMatrix v;
 	glMatrixMode(GL_MODELVIEW_MATRIX);
 	v.rotateZAxis(degrees);
 }
 
+/**
+*	Draw two squares next to each other and have them rotate on a keypress
+*	One of them rotate around one of its vertices rather than its center
+*/
 void task2(void) {
 	glPushMatrix();
 		manualTranslation(1.0, 1.0, -5.0);
@@ -171,14 +192,25 @@ void task2(void) {
 		draw_square();
 	glPopMatrix();
 }
+
+/**
+*	Print out the given quats values
+*/
 void printQuat(MyQuat q) {
 	std::cout << "W: " << q.w << " (X Y Z) " << q.v.x << " " << q.v.y << " " << q.v.z << std::endl;
 }
 
+/**
+*	Print out the given positions xyz coords
+*/
 void printPos(MyPosition & p) {
 	float len = sqrt((p.x * p.x) + (p.y * p.y) + (p.z * p.z));
 	std::cout << "P: " << p.x << " " << p.y << " " << p.z << "  length: " << len << std::endl;
 }
+
+/**
+*	Rotate the point (1,1,0) around the axis (0,0,1) 45 degrees using the quaternion class
+*/
 void task3dot2(void) {
 	MyPosition p;
 	p.x = 1.0; p.y = 1.0; p.z = 0.0;
@@ -208,7 +240,7 @@ void task3dot2(void) {
 		DrawLine(orig, initPoint);
 
 		//show final rotated point (vector)
-		glColor3f(1.0, 0.0, 0.0); //yellow
+		glColor3f(1.0, 0.0, 0.0); //Red
 
 		MyPosition resPoint;
 		resPoint.x = res.x; resPoint.y = res.y; resPoint.z = res.z;
@@ -221,11 +253,12 @@ void task3dot2(void) {
 		//Show orig (point) 
 		drawOrig();
 
-	glPopMatrix();
-	
+	glPopMatrix();	
 }
 
-
+/**
+*	Rotate the point (0,-10,0) around the axis (10,0,0) 45 degrees using the quaternion class
+*/
 void task3dot3(void) {
 	MyPosition p;
 	p.x = 0.0; p.y = -10.0; p.z = 0.0;
@@ -256,7 +289,7 @@ void task3dot3(void) {
 		DrawLine(orig, initPoint);
 
 		//show final rotated point (vector)
-		glColor3f(1.0, 0.0, 0.0); //yellow
+		glColor3f(1.0, 0.0, 0.0); //Red
 		
 		MyPosition resPoint;
 		resPoint.x = res.x; resPoint.y = res.y; resPoint.z = res.z;
@@ -270,13 +303,8 @@ void task3dot3(void) {
 		drawOrig();
 
 	glPopMatrix();
-
-
-
 }
 
-
-//our main routine
 int main(int argc, char *argv[])
 {
   //Initialise Glut and create a window
@@ -310,8 +338,9 @@ int main(int argc, char *argv[])
   return 0;
 }
 
-//draw callback function - this is called by glut whenever the 
-//window needs to be redrawn
+/**
+*	Draw callback function - this is called by glut whenever the window needs to be redrawn
+*/
 void draw(void)
 {
   //clear the current window
@@ -324,10 +353,8 @@ void draw(void)
   //***DO ALL YOUR DRAWING HERE****//
   //.........................ANSWERS.........................
   task2();
- // task3dot2();
+  //task3dot2();
  // task3dot3();
-
- 
 
   //flush what we've drawn to the buffer
   glFlush();
@@ -335,8 +362,9 @@ void draw(void)
   glutSwapBuffers();
 }
 
-//idle callback function - this is called when there is nothing 
-//else to do
+/**
+*	Idle callback function - this is called when there is nothing else to do
+*/
 void idle(void)
 {
   //this is a good place to do animation
@@ -345,8 +373,9 @@ void idle(void)
 	//draw();
 }
 
-//key callback function - called whenever the user presses a 
-//key
+/**
+*	Key callback function - called whenever the user presses a KEY
+*/
 void key(unsigned char k, int x, int y)
 {
   switch(k)
@@ -361,7 +390,9 @@ void key(unsigned char k, int x, int y)
   }
 }
 
-//reshape callback function - called when the window size changed
+/**
+*	Reshape callback function - called when the window size changed
+*/
 void reshape(int width, int height)
 {
   //set the viewport to be the same width and height as the window
@@ -378,8 +409,10 @@ void reshape(int width, int height)
   draw();
 }
 
-//set up OpenGL before we do any drawing
-//this function is only called once at the start of the program
+/**
+*	Set up OpenGL before we do any drawing
+*	This function is only called once at the start of the program
+*/
 void init_drawing(void)
 {
   //blend colours across the surface of the polygons
