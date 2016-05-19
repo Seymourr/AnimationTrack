@@ -352,9 +352,9 @@ void draw(void)
   
   //***DO ALL YOUR DRAWING HERE****//
   //.........................ANSWERS.........................
-  task2();
+  //task2();
   //task3dot2();
- // task3dot3();
+  task3dot3();
 
   //flush what we've drawn to the buffer
   glFlush();
